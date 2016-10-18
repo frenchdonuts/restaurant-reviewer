@@ -1,7 +1,7 @@
 ### Install:
 ```
-git clone https://github.com/frenchdonuts/elm-webpack-starter
-cd elm-webpack-starter
+git clone git@github.com:frenchdonuts/restaurant-reviewer.git
+cd restaurant-reviewer
 npm install
 ```
 
