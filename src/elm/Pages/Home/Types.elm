@@ -1,14 +1,15 @@
 module Pages.Home.Types exposing (..)
 
-import Http
+import Components.FilterMenu.Types as FilterMenu
 import Geolocation
 
 
 type alias Model =
     { restaurants : List Restaurant
-    , restaurantFilters : String
-    , location : ( Float, Float )
+    , restaurantFilters : FilterMenu.State
+    , location : Maybe Geolocation.Location
     , loaderDisplayed : Bool
+    , errMsg : String
     }
 
 
@@ -27,5 +28,8 @@ type alias Restaurant =
 
 type Msg
     = OnInitErr String
-    | OnInitSuc (List Restaurant)
+    | OnInitSuc Geolocation.Location
+    | FetchRestaurants
+    | OnFetchRestaurantsErr String
+    | OnFetchRestaurantsSuc (List Restaurant)
     | OnRestaurantClick Restaurant
