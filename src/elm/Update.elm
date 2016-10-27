@@ -6,20 +6,18 @@ import Msg exposing (..)
 import Api exposing (..)
 import Task exposing (Task, perform, onError)
 import Geolocation exposing (now)
-import Debug
 
 
 init : ( Model, Cmd Msg )
 init =
-    Debug.log "init"
-        ( { restaurants = []
-          , restaurantFilters = initFilters
-          , location = Nothing
-          , loaderDisplayed = True
-          , errMsg = ""
-          }
-        , Task.perform OnInitErr OnInitSuc initTask
-        )
+    ( { restaurants = []
+      , restaurantFilters = initFilters
+      , location = Nothing
+      , loaderDisplayed = True
+      , errMsg = ""
+      }
+    , Task.perform OnInitErr OnInitSuc initTask
+    )
 
 
 initFilters : Filters
