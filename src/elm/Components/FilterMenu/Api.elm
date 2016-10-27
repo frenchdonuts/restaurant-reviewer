@@ -4,10 +4,10 @@ import Components.FilterMenu.Types exposing (..)
 
 
 queryParameters : State -> List ( String, String )
-queryParameters (State { openNow, cuisine, price }) =
+queryParameters (State { openNow, cuisine, maxPrice }) =
     let
         maxprice =
-            case price of
+            case maxPrice of
                 Steal ->
                     "0"
 

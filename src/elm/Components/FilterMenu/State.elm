@@ -8,7 +8,7 @@ init =
     State
         { cuisine = NoPreference
         , openNow = False
-        , price = Fancy
+        , maxPrice = Fancy
         }
 
 
@@ -24,4 +24,4 @@ setCuisine cuisine (State state) =
 
 setPrice : Price -> State -> State
 setPrice price (State state) =
-    State { state | price = price }
+    State { state | maxPrice = price }

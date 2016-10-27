@@ -5,7 +5,7 @@ type State
     = State
         { cuisine : Cuisine
         , openNow : Bool
-        , price : Price
+        , maxPrice : Price
         }
 
 

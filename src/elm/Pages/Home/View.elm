@@ -4,9 +4,17 @@ import Pages.Home.Types exposing (..)
 import Html exposing (..)
 
 
+{-| How will the UI look?
+    Card
+        Toggle in upper right corner
+        2 Selectors in 1 row - Cuisine and (max)Price
+-}
 root : Model -> Html Msg
 root { restaurants, restaurantFilters, loaderDisplayed, errMsg } =
-    div [] (List.map restaurantCard restaurants)
+    div
+        []
+        [ ul [] (List.map restaurantCard restaurants)
+        ]
 
 
 restaurantCard : Restaurant -> Html Msg
