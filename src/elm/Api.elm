@@ -1,14 +1,16 @@
 module Api exposing (getRestaurants)
 
+import Model exposing (..)
 import Types exposing (..)
 import Helper
+import Components.Autocomplete exposing (getSelectedDatum)
 import Task
 import Http
 import Json.Decode as Json exposing ((:=))
 
 
-getRestaurants : Float -> Float -> Filters -> Task.Task Http.Error (List Restaurant)
-getRestaurants lat long filterMenu =
+getRestaurants : Float -> Float -> Model -> Task.Task Http.Error (List Restaurant)
+getRestaurants lat long model =
     let
         api_key =
             "AIzaSyBFF9RccdIGE7dOBQdiq8m0EPGNJH51pmg"
@@ -17,7 +19,7 @@ getRestaurants lat long filterMenu =
             toString lat ++ "," ++ toString long
 
         parameters =
-            queryParameters filterMenu
+            queryParameters model
                 ++ [ ( "key", api_key )
                    , ( "location", latlong )
                    , ( "radius", "500" )
@@ -40,29 +42,36 @@ decodeRestaurant =
         ("formatted_address" := Json.string)
 
 
-queryParameters : Filters -> List ( String, String )
-queryParameters { openNow, cuisine, maxPrice } =
+queryParameters : Model -> List ( String, String )
+queryParameters { includeCasualInSearch, includeFancyInSearch, openNow, cuisineAutocomplete } =
     let
-        maxprice =
-            case maxPrice of
-                Steal ->
+        selectedCuisine =
+            case getSelectedDatum cuisineAutocomplete of
+                Just cuisine ->
+                    cuisine
+
+                Nothing ->
+                    NoPreference
+
+        minprice =
+            case includeCasualInSearch of
+                True ->
                     "0"
 
-                Deal ->
-                    "1"
-
-                Casual ->
-                    "2"
-
-                Fine ->
+                False ->
                     "3"
 
-                Fancy ->
+        maxprice =
+            case includeFancyInSearch of
+                True ->
                     "4"
 
+                False ->
+                    "2"
+
         parameters =
-            [ ( "query", cuisineString cuisine ++ " restaurant" )
-            , ( "minprice", "0" )
+            [ ( "query", cuisineString selectedCuisine ++ " restaurant" )
+            , ( "minprice", minprice )
             , ( "maxprice", maxprice )
             ]
     in

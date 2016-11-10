@@ -4,7 +4,6 @@ import Types exposing (..)
 import Model exposing (..)
 import Msg exposing (..)
 import Components.Autocomplete as Autocomplete
-import Components.Dropdown.View as Dropdown
 import Helper exposing (prices, priceString, cuisines, cuisineString)
 import Html exposing (Html, div, text, img, h4, select, option)
 import Html.Attributes as Attr
@@ -16,8 +15,6 @@ import Material.Button as Button exposing (render, colored, primary)
 
 
 --import Material.Card as Card exposing (jj)
-
-import Material.Options exposing (attribute)
 
 
 cuisineAutocompleteViewConfig : Autocomplete.ViewConfig Cuisine
@@ -48,11 +45,8 @@ cuisineAutocompleteViewConfig =
 view : Model -> Html Msg
 view model =
     let
-        { restaurants, restaurantFilters, loaderDisplayed, errMsg, mdl, cuisineAutocomplete, priceDropdown } =
+        { restaurants, loaderDisplayed, errMsg, mdl, cuisineAutocomplete, includeCasualInSearch, includeFancyInSearch, openNow } =
             model
-
-        { cuisine, openNow, maxPrice } =
-            restaurantFilters
     in
         div
             []
@@ -65,22 +59,37 @@ view model =
                     ]
                  , cell
                     [ size All 3 ]
-                    [ Dropdown.root
-                        (List.map priceString prices)
-                        priceDropdown
-                        |> map PriceDropdown
+                    [ div
+                        []
+                        [ Toggles.checkbox Mdl
+                            [ 0 ]
+                            model.mdl
+                            [ Toggles.value includeCasualInSearch
+                            , Toggles.ripple
+                            , Toggles.onClick ToggleCasual
+                            ]
+                            [ text "Casual" ]
+                        , Toggles.checkbox Mdl
+                            [ 1 ]
+                            model.mdl
+                            [ Toggles.value includeFancyInSearch
+                            , Toggles.ripple
+                            , Toggles.onClick ToggleFancy
+                            ]
+                            [ text "Fancy" ]
+                        ]
                     ]
                  , cell
-                    [ size All 6 ]
-                    [ switch Mdl [ 0 ] mdl [ value openNow ] [ text "Open now" ] ]
+                    [ size All 3 ]
+                    [ switch Mdl [ 2 ] mdl [ Toggles.onClick ToggleOpenNow, value openNow ] [ text "Open now" ] ]
                  , cell
-                    [ size All 6 ]
+                    [ size All 3 ]
                     [ div
                         [ Attr.attribute "role" "button" ]
                         [ Button.render Mdl
                             [ 1 ]
                             mdl
-                            [ primary ]
+                            [ Button.onClick FetchRestaurants, primary ]
                             [ text "Search" ]
                         ]
                     ]

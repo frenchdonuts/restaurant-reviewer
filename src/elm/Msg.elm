@@ -1,7 +1,6 @@
 module Msg exposing (..)
 
 import Types exposing (..)
-import Components.Dropdown.Types as Dropdown
 import Geolocation
 import Material
 import Components.Autocomplete as Autocomplete
@@ -19,7 +18,10 @@ type Msg
       -- Cuisine Selector (Autocomplete)
     | CuisineAutocomplete Autocomplete.Msg
       -- Price Selector
-    | PriceDropdown Dropdown.Msg
+    | ToggleCasual
+    | ToggleFancy
+      -- Open now toggle
+    | ToggleOpenNow
       -- Restaurant List
     | OnRestaurantClick Restaurant
     | Mdl (Material.Msg Msg)

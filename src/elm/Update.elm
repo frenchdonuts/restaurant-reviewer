@@ -4,7 +4,6 @@ import Types exposing (..)
 import Model exposing (..)
 import Msg exposing (..)
 import Api exposing (..)
-import Components.Dropdown.State as Dropdown
 import Helper exposing (cuisines, cuisineString, cuisineStringInverse, prices)
 import Task exposing (Task, perform, onError)
 import Geolocation exposing (now)
@@ -15,24 +14,17 @@ import Components.Autocomplete as Autocomplete
 init : ( Model, Cmd Msg )
 init =
     ( { restaurants = []
-      , restaurantFilters = initFilters
       , location = Nothing
       , loaderDisplayed = True
       , errMsg = ""
       , mdl = Material.model
       , cuisineAutocomplete = Autocomplete.init
-      , priceDropdown = Dropdown.init (List.length prices)
+      , includeCasualInSearch = True
+      , includeFancyInSearch = True
+      , openNow = False
       }
     , Task.perform OnInitErr OnInitSuc initTask
     )
-
-
-initFilters : Filters
-initFilters =
-    { cuisine = NoPreference
-    , openNow = False
-    , maxPrice = Casual
-    }
 
 
 initTask : Task String Geolocation.Location
@@ -48,7 +40,7 @@ subscriptions model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     let
-        { cuisineAutocomplete, priceDropdown } =
+        { cuisineAutocomplete } =
             model
     in
         case msg of
@@ -105,27 +97,55 @@ update msg model =
                 in
                     newModel ! [ Cmd.map CuisineAutocomplete cmd ]
 
-            -- Price Selector
-            PriceDropdown msg ->
+            -- Price Selector - make sure at least one of them is always True
+            ToggleCasual ->
                 let
-                    ( priceDropdown', cmd ) =
-                        Dropdown.update msg priceDropdown
+                    casual =
+                        not model.includeCasualInSearch
+
+                    fancy =
+                        if not casual then
+                            True
+                        else
+                            model.includeFancyInSearch
                 in
                     ( { model
-                        | priceDropdown = priceDropdown'
+                        | includeCasualInSearch = casual
+                        , includeFancyInSearch = fancy
                       }
-                    , Cmd.map PriceDropdown cmd
+                    , Cmd.none
                     )
+
+            ToggleFancy ->
+                let
+                    fancy =
+                        not model.includeFancyInSearch
+
+                    casual =
+                        if not fancy then
+                            True
+                        else
+                            model.includeCasualInSearch
+                in
+                    ( { model
+                        | includeFancyInSearch = fancy
+                        , includeCasualInSearch = casual
+                      }
+                    , Cmd.none
+                    )
+
+            ToggleOpenNow ->
+                { model | openNow = not model.openNow } ! []
 
             Mdl msg ->
                 Material.update msg model
 
 
 fetchRestaurants : Model -> Task String (List Restaurant)
-fetchRestaurants { location, restaurantFilters } =
-    case location of
+fetchRestaurants model =
+    case model.location of
         Just location ->
-            getRestaurants location.latitude location.longitude restaurantFilters
+            getRestaurants location.latitude location.longitude model
                 `onError` (\_ -> Task.fail "Failed to fetch restaurants.")
 
         Nothing ->

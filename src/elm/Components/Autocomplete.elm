@@ -35,6 +35,11 @@ init =
     }
 
 
+getSelectedDatum : State a -> Maybe a
+getSelectedDatum =
+    .selectedDatum
+
+
 type Msg
     = SetQuery String
     | SetAutoState Menu.Msg
