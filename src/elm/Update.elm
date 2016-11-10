@@ -5,26 +5,26 @@ import Model exposing (..)
 import Msg exposing (..)
 import Api exposing (..)
 import Helper exposing (cuisines, cuisineString, cuisineStringInverse, prices)
+import Components.Autocomplete as Autocomplete
 import Task exposing (Task, perform, onError)
 import Geolocation exposing (now)
 import Material
-import Components.Autocomplete as Autocomplete
+import Material.Layout as Layout
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { restaurants = []
-      , location = Nothing
-      , loaderDisplayed = True
-      , errMsg = ""
-      , mdl = Material.model
-      , cuisineAutocomplete = Autocomplete.init
-      , includeCasualInSearch = True
-      , includeFancyInSearch = True
-      , openNow = False
-      }
-    , Task.perform OnInitErr OnInitSuc initTask
-    )
+    { restaurants = []
+    , location = Nothing
+    , loaderDisplayed = True
+    , errMsg = ""
+    , mdl = Material.model
+    , cuisineAutocomplete = Autocomplete.init
+    , includeCasualInSearch = True
+    , includeFancyInSearch = True
+    , openNow = False
+    }
+        ! [ Task.perform OnInitErr OnInitSuc initTask, Layout.sub0 Mdl ]
 
 
 initTask : Task String Geolocation.Location
@@ -34,7 +34,10 @@ initTask =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.map CuisineAutocomplete Autocomplete.subscription
+    Sub.batch
+        [ Sub.map CuisineAutocomplete Autocomplete.subscription
+        , Layout.subs Mdl model.mdl
+        ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
