@@ -1,5 +1,5 @@
 // pull in desired CSS/SASS files
-require( './styles/main.scss' );
+require( './styles/materialize.css' );
 
 // Fullscreen our Elm App
 var Elm = require( '../elm/Main' );

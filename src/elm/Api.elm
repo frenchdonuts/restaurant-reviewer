@@ -1,6 +1,7 @@
 module Api exposing (getRestaurants)
 
 import Types exposing (..)
+import Helper
 import Task
 import Http
 import Json.Decode as Json exposing ((:=))
@@ -77,56 +78,5 @@ cuisineString cuisine =
         NoPreference ->
             ""
 
-        African ->
-            "african"
-
-        AsianFusion ->
-            "asian fusion"
-
-        American ->
-            "american"
-
-        Bakery ->
-            "bakery"
-
-        Breakfast ->
-            "breakfast"
-
-        Brunch ->
-            "brunch"
-
-        Chinese ->
-            "chinese"
-
-        Dessert ->
-            "dessert"
-
-        Dinner ->
-            "dinner"
-
-        Indian ->
-            "indian"
-
-        Italian ->
-            "italian"
-
-        Japanese ->
-            "japanese"
-
-        Korean ->
-            "korean"
-
-        Lunch ->
-            "lunch"
-
-        Mediterranean ->
-            "mediterranean"
-
-        Mexican ->
-            "mexican"
-
-        MiddleEastern ->
-            "middle eastern"
-
-        Vietnamese ->
-            "vietnamese"
+        _ ->
+            Helper.cuisineString cuisine

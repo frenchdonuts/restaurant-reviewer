@@ -1,7 +1,10 @@
 module Model exposing (..)
 
 import Types exposing (..)
+import Components.Dropdown.Types as Dropdown
 import Geolocation
+import Material
+import Components.Autocomplete as Autocomplete
 
 
 type alias Model =
@@ -10,25 +13,7 @@ type alias Model =
     , location : Maybe Geolocation.Location
     , loaderDisplayed : Bool
     , errMsg : String
+    , cuisineAutocomplete : Autocomplete.State Cuisine
+    , priceDropdown : Dropdown.State
+    , mdl : Material.Model
     }
-
-
-
-{-
-   type alias Model =
-       { data : Data
-       , viewModel : ViewModel
-       }
-
-   type alias Data =
-       { restaurants : List Restaurant
-       , location : Maybe Geolocation.Location
-       }
-
-
-   type alias ViewModel =
-       { restaurantFilters : Filters
-       , loaderDisplayed : Bool
-       , errMsg : String
-       }
--}
