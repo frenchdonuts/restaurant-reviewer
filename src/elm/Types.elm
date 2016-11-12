@@ -1,12 +1,36 @@
 module Types exposing (..)
 
+import Date
 
-type alias Restaurant =
+
+type alias RestaurantPreview =
     { name : String
     , types : List String
-    , photoUrl : String
+    , photos : List String
     , address : String
     }
+
+
+type alias Review =
+    { reviewer : String
+    , date : Date.Date
+    , rating : Rating
+    , comments : List Comment
+    }
+
+
+type alias Comment =
+    { author : String
+    , comment : String
+    }
+
+
+type Rating
+    = One
+    | Two
+    | Three
+    | Four
+    | Five
 
 
 type alias Filters =

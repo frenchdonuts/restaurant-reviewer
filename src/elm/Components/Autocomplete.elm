@@ -1,3 +1,8 @@
+{- Modified from
+   https://github.com/thebritican/elm-autocomplete/blob/master/examples/src/AccessibleExample.elm
+-}
+
+
 module Components.Autocomplete exposing (..)
 
 import Autocomplete as Menu
@@ -5,6 +10,8 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Html.App as Html
+import Material.Textfield as Textfield
+import Material.Options as Options
 import String
 import Json.Decode as Json
 import Dom
@@ -22,16 +29,20 @@ type alias State a =
     , query : String
     , selectedDatum : Maybe a
     , showMenu : Bool
+    , textfield : Textfield.Model
+    , autocompleteId : String
     }
 
 
-init : State a
-init =
+init : String -> State a
+init autocompleteId =
     { autoState = Menu.empty
     , howManyToShow = 5
     , query = ""
     , selectedDatum = Nothing
     , showMenu = False
+    , textfield = Textfield.defaultModel
+    , autocompleteId = autocompleteId
     }
 
 
@@ -50,6 +61,8 @@ type Msg
     | SelectDatumMouse String
     | PreviewDatum String
     | OnFocus
+    | OnBlur
+    | Textfield Textfield.Msg
     | NoOp
 
 
@@ -148,13 +161,19 @@ update config msg state data =
                     setQuery state config.toId id data
                         |> resetMenu
             in
-                ( newModel, Task.perform (\err -> NoOp) (\_ -> NoOp) (Dom.focus "president-input") )
+                ( newModel, Task.perform (\err -> NoOp) (\_ -> NoOp) (Dom.focus <| state.autocompleteId ++ "-input") )
 
         PreviewDatum id ->
             { state | selectedDatum = getDatumAtId data config.toId id } ! []
 
         OnFocus ->
             state ! []
+
+        OnBlur ->
+            resetMenu state ! []
+
+        Textfield msg ->
+            { state | textfield = Textfield.update msg state.textfield } ! []
 
         NoOp ->
             state ! []
@@ -244,28 +263,33 @@ view config state data =
 
                 Nothing ->
                     attributes
+
+        extraAttributes =
+            activeDescendant
+                [ attribute "aria-owns" <| state.autocompleteId ++ "-list"
+                , attribute "aria-expanded" <| String.toLower <| toString state.showMenu
+                , attribute "aria-haspopup" <| String.toLower <| toString state.showMenu
+                , attribute "role" "combobox"
+                , attribute "aria-autocomplete" "list"
+                , attribute "aria-label" config.inputLabel
+                  --onWithOptions "keydown" options dec
+                ]
     in
-        div [ class "input-field" ]
+        div []
             (List.append
-                [ input
-                    (activeDescendant
-                        [ onInput SetQuery
-                        , onFocus OnFocus
-                        , onWithOptions "keydown" options dec
-                        , value query
-                        , id "president-input"
-                        , placeholder "No Preference"
-                        , class "validate"
-                        , autocomplete False
-                        , attribute "aria-owns" "list-of-presidents"
-                        , attribute "aria-expanded" <| String.toLower <| toString state.showMenu
-                        , attribute "aria-haspopup" <| String.toLower <| toString state.showMenu
-                        , attribute "role" "combobox"
-                        , attribute "aria-autocomplete" "list"
-                        ]
-                    )
-                    []
-                , label [ for "president-input", class "active" ] [ text config.inputLabel ]
+                [ Textfield.view Textfield
+                    state.textfield
+                    [ Options.inner <| List.map Options.attribute <| extraAttributes
+                    , Textfield.value query
+                    , Textfield.onInput SetQuery
+                    , Textfield.onFocus OnFocus
+                    , Textfield.onBlur OnBlur
+                    , Textfield.on "keydown" dec
+                    , Textfield.label config.inputLabel
+                    , Textfield.floatingLabel
+                    , Textfield.text'
+                    , Options.id <| state.autocompleteId ++ "-input"
+                    ]
                 ]
                 menu
             )
@@ -283,7 +307,7 @@ acceptableData query toId data =
 viewMenu : ViewConfig a -> State a -> List a -> Html Msg
 viewMenu config state data =
     div [ style [ ( "position", "relative" ) ] ]
-        [ Html.map SetAutoState (Menu.view (viewConfig config) state.howManyToShow state.autoState (acceptableData state.query config.toId data)) ]
+        [ Html.map SetAutoState (Menu.view (viewConfig config state.autocompleteId) state.howManyToShow state.autoState (acceptableData state.query config.toId data)) ]
 
 
 updateConfig : UpdateConfig a -> Menu.UpdateConfig Msg a
@@ -307,10 +331,10 @@ updateConfig config =
         }
 
 
-viewConfig : ViewConfig a -> Menu.ViewConfig a
-viewConfig config =
+viewConfig : ViewConfig a -> String -> Menu.ViewConfig a
+viewConfig config autocompleteId =
     Menu.viewConfig
         { toId = config.toId
-        , ul = config.ul
+        , ul = config.ul ++ [ id <| autocompleteId ++ "-list" ]
         , li = config.li
         }

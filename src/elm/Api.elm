@@ -9,12 +9,14 @@ import Http
 import Json.Decode as Json exposing ((:=))
 
 
-getRestaurants : Float -> Float -> Model -> Task.Task Http.Error (List Restaurant)
+api_key : String
+api_key =
+    "AIzaSyBFF9RccdIGE7dOBQdiq8m0EPGNJH51pmg"
+
+
+getRestaurants : Float -> Float -> Model -> Task.Task Http.Error (List RestaurantPreview)
 getRestaurants lat long model =
     let
-        api_key =
-            "AIzaSyBFF9RccdIGE7dOBQdiq8m0EPGNJH51pmg"
-
         latlong =
             toString lat ++ "," ++ toString long
 
@@ -29,16 +31,36 @@ getRestaurants lat long model =
             Http.url
                 "https://maps.googleapis.com/maps/api/place/textsearch/json"
                 parameters
+
+        mockUrl =
+            "http://localhost:8080/static/restaurants_response.json"
+
+        photoReferenceToUrl restaurants =
+            List.map (\restaurant -> { restaurant | photos = List.map toPhotoUrl restaurant.photos }) restaurants
     in
-        Http.get ("results" := Json.list decodeRestaurant) url
+        Http.get ("results" := Json.list decodeRestaurant) mockUrl
+            |> Task.map photoReferenceToUrl
+            |> Debug.log "hit11111111"
 
 
-decodeRestaurant : Json.Decoder Restaurant
+{-|
+    This will translate the photo_reference our initial search returned to the
+    actual API query needed to grab the restaurant image.
+-}
+toPhotoUrl : String -> String
+toPhotoUrl reference =
+    "https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference="
+        ++ reference
+        ++ "key="
+        ++ api_key
+
+
+decodeRestaurant : Json.Decoder RestaurantPreview
 decodeRestaurant =
-    Json.object4 Restaurant
+    Json.object4 RestaurantPreview
         ("name" := Json.string)
         ("types" := Json.list Json.string)
-        ("icon" := Json.string)
+        ("photos" := Json.list ("photo_reference" := Json.string))
         ("formatted_address" := Json.string)
 
 

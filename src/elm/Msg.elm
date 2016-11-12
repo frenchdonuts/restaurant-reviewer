@@ -14,7 +14,7 @@ type Msg
       -- API Restaurant Request
     | FetchRestaurants
     | OnFetchRestaurantsErr String
-    | OnFetchRestaurantsSuc (List Restaurant)
+    | OnFetchRestaurantsSuc (List RestaurantPreview)
       -- Cuisine Selector (Autocomplete)
     | CuisineAutocomplete Autocomplete.Msg
       -- Price Selector
@@ -23,5 +23,6 @@ type Msg
       -- Open now toggle
     | ToggleOpenNow
       -- Restaurant List
-    | OnRestaurantClick Restaurant
+    | OnRestaurantClick RestaurantPreview
+    | MouseEnterRestaurantCard (Maybe Int)
     | Mdl (Material.Msg Msg)

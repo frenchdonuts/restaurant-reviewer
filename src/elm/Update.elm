@@ -19,10 +19,11 @@ init =
     , loaderDisplayed = True
     , errMsg = ""
     , mdl = Material.model
-    , cuisineAutocomplete = Autocomplete.init
+    , cuisineAutocomplete = Autocomplete.init "cuisine"
     , includeCasualInSearch = True
     , includeFancyInSearch = True
     , openNow = False
+    , indexOfElevatedCard = Nothing
     }
         ! [ Task.perform OnInitErr OnInitSuc initTask, Layout.sub0 Mdl ]
 
@@ -140,11 +141,14 @@ update msg model =
             ToggleOpenNow ->
                 { model | openNow = not model.openNow } ! []
 
+            MouseEnterRestaurantCard maybeIndex ->
+                { model | indexOfElevatedCard = maybeIndex } ! []
+
             Mdl msg ->
                 Material.update msg model
 
 
-fetchRestaurants : Model -> Task String (List Restaurant)
+fetchRestaurants : Model -> Task String (List RestaurantPreview)
 fetchRestaurants model =
     case model.location of
         Just location ->
