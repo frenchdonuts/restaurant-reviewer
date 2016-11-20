@@ -2,32 +2,36 @@ module View exposing (root)
 
 import Model exposing (..)
 import Msg exposing (..)
-import Views.Pages.Home as Home exposing (view)
+import Types exposing (..)
+import Views.Pages.Home as Home
+import Views.Pages.RestaurantDetail as RestaurantDetail
 import Html exposing (Html, div, ul, text, img, span)
 import Html.Attributes as Attr
 import Material.Layout as Layout
 import Material.Elevation as Elevation
 import Material.Options as Options exposing (css)
+import Debug
 
 
 root : Model -> Html Msg
 root model =
     let
+        currentView =
+            case model.currentPage of
+                Home ->
+                    Home.view model
+
+                RestaurantDetail _ ->
+                    RestaurantDetail.view model
+
         main =
             div
-                [ Attr.style
-                    [ ( "margin", "auto" )
-                    , ( "padding-top", "2%" )
-                    , ( "padding-left", "8%" )
-                    , ( "padding-right", "8%" )
-                      --, ( "min-height", "500px" )
-                    ]
-                ]
-                [ Home.view model ]
+                []
+                [ currentView ]
     in
         Layout.render Mdl
             model.mdl
-            [ Layout.waterfall True ]
+            [ Layout.scrolling ]
             { header = header model
             , drawer = []
             , tabs = ( [], [] )
@@ -43,7 +47,7 @@ header model =
         , Layout.spacer
         , Layout.navigation []
             [ Layout.link
-                [ Layout.href "https://github.com/debois/elm-mdl" ]
+                [ Layout.href "https://github.com/frenchdonuts/restaurant-reviewer" ]
                 [ span [] [ text "github" ] ]
             ]
         ]

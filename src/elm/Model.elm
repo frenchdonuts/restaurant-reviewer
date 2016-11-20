@@ -7,7 +7,8 @@ import Components.Autocomplete as Autocomplete
 
 
 type alias Model =
-    { restaurants : List RestaurantPreview
+    { currentPage : Page
+    , restaurants : List RestaurantPreview
     , location : Maybe Geolocation.Location
     , loaderDisplayed : Bool
     , errMsg : String
@@ -16,5 +17,7 @@ type alias Model =
     , includeFancyInSearch : Bool
     , openNow : Bool
     , indexOfElevatedCard : Maybe Int
+    , selectedRestaurant : Maybe Restaurant
     , mdl : Material.Model
+    , timezoneOffset : Int
     }

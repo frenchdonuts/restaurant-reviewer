@@ -3,4 +3,6 @@ require( './styles/main.css' );
 
 // Fullscreen our Elm App
 var Elm = require( '../elm/Main' );
-var restaurantReviewer = Elm.Main.fullscreen();
+var app = Elm.Main.fullscreen();
+
+app.ports.setTimezoneOffset.send(new Date().getTimezoneOffset())

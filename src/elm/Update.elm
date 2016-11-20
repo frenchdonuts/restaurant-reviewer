@@ -1,12 +1,18 @@
-module Update exposing (init, subscriptions, update)
+port module Update exposing (init, subscriptions, update, mockRestaurantDetailInit)
 
 import Types exposing (..)
 import Model exposing (..)
 import Msg exposing (..)
 import Api exposing (..)
+import Nav
 import Helper exposing (cuisines, cuisineString, cuisineStringInverse, prices)
 import Components.Autocomplete as Autocomplete
-import Task exposing (Task, perform, onError)
+import Task exposing (..)
+
+
+-- (Task, perform, onError, andThen)
+
+import Navigation
 import Geolocation exposing (now)
 import Material
 import Material.Layout as Layout
@@ -14,7 +20,8 @@ import Material.Layout as Layout
 
 init : ( Model, Cmd Msg )
 init =
-    { restaurants = []
+    { currentPage = Home
+    , restaurants = []
     , location = Nothing
     , loaderDisplayed = True
     , errMsg = ""
@@ -24,8 +31,68 @@ init =
     , includeFancyInSearch = True
     , openNow = False
     , indexOfElevatedCard = Nothing
+    , selectedRestaurant = Nothing
+    , timezoneOffset = 0
     }
         ! [ Task.perform OnInitErr OnInitSuc initTask, Layout.sub0 Mdl ]
+
+
+mockRestaurantDetailInit : ( Model, Cmd Msg )
+mockRestaurantDetailInit =
+    let
+        initialModel =
+            { currentPage = RestaurantDetail ""
+            , restaurants = []
+            , location = Nothing
+            , loaderDisplayed = True
+            , errMsg = ""
+            , mdl = Material.model
+            , cuisineAutocomplete = Autocomplete.init "cuisine"
+            , includeCasualInSearch = True
+            , includeFancyInSearch = True
+            , openNow = False
+            , indexOfElevatedCard = Nothing
+            , selectedRestaurant = Nothing
+            , timezoneOffset = 0
+            }
+    in
+        initialModel
+            ! [ Task.perform
+                    OnFetchRestaurantErr
+                    OnFetchRestaurantSuc
+                    (mockRestaurantDetailInitTask initialModel)
+              ]
+
+
+mockRestaurantDetailInitTask : Model -> Task String Restaurant
+mockRestaurantDetailInitTask model =
+    let
+        findOutWhereWeAre =
+            Debug.log "Finding out where we are " now
+                `onError` (\err -> Debug.log "Fetch current location error." err |> (\_ -> fail "Couldn't find out where we are."))
+
+        getSomeRestaurants location =
+            Debug.log "Getting some restaurants" <|
+                getRestaurants location.latitude location.longitude model
+                    `onError` (\err -> Debug.log "Fetch restaurants error" err |> (\_ -> fail "Couldn't fetch any restaurants."))
+
+        extractSomeRestaurant restaurants =
+            case List.head restaurants of
+                Just restaurant ->
+                    succeed restaurant
+
+                Nothing ->
+                    fail <| Debug.log "" "No restaurants around here bruh."
+
+        getDetailsAboutThatRestaurant restaurant =
+            Debug.log "Getting the restaurant deets" <|
+                getRestaurant restaurant.id
+                    `onError` (\err -> Debug.log "Fetch restaurant details error" err |> (\_ -> fail "Trouble fetching restaurant details."))
+    in
+        findOutWhereWeAre
+            `andThen` getSomeRestaurants
+            `andThen` extractSomeRestaurant
+            `andThen` getDetailsAboutThatRestaurant
 
 
 initTask : Task String Geolocation.Location
@@ -38,7 +105,11 @@ subscriptions model =
     Sub.batch
         [ Sub.map CuisineAutocomplete Autocomplete.subscription
         , Layout.subs Mdl model.mdl
+        , setTimezoneOffset OnTimezoneOffsetFetched
         ]
+
+
+port setTimezoneOffset : (Int -> msg) -> Sub msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -86,9 +157,35 @@ update msg model =
                 , Cmd.none
                 )
 
+            OnFetchRestaurantErr httpErr ->
+                ( { model
+                    | errMsg = Debug.log "fetch restaurant error" httpErr |> (\_ -> "Error fetching restaurant")
+                    , loaderDisplayed = False
+                  }
+                , Cmd.none
+                )
+
+            OnFetchRestaurantSuc restaurant ->
+                ( { model
+                    | selectedRestaurant = Just restaurant
+                    , loaderDisplayed = False
+                  }
+                , Cmd.none
+                )
+
             -- Routing happens here
-            OnRestaurantClick restaurant ->
-                ( model, Cmd.none )
+            OnRestaurantClick restaurantPreview ->
+                let
+                    newPage =
+                        RestaurantDetail restaurantPreview.id
+                in
+                    { model | currentPage = newPage }
+                        ! [ Navigation.newUrl <| Nav.toPath newPage
+                          , Task.perform
+                                OnFetchRestaurantErr
+                                OnFetchRestaurantSuc
+                                (Task.mapError (\err -> Debug.log "fetch restaurant error" err |> (\_ -> "Couldn't fetch restaurant")) <| getRestaurant restaurantPreview.id)
+                          ]
 
             -- Cuisine Selector (Autocomplete)
             CuisineAutocomplete msg ->
@@ -143,6 +240,9 @@ update msg model =
 
             MouseEnterRestaurantCard maybeIndex ->
                 { model | indexOfElevatedCard = maybeIndex } ! []
+
+            OnTimezoneOffsetFetched offsetInMin ->
+                { model | timezoneOffset = Debug.log "offsetInMs" offsetInMin } ! []
 
             Mdl msg ->
                 Material.update msg model

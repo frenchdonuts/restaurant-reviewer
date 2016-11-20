@@ -1,3 +1,14 @@
-.active {
-    background-color: #757575
+/* These css properties are to make sure:
+    1) The whole review gets displayed
+    2) The date is set positioned in the upper-right corner (setting li relative)
+*/
+li.mdl-list__item--three-line {
+    position: relative;
+    min-height: 88px;
+    height: auto;
+}
+
+.mdl-list__item--three-line span.mdl-list__item-primary-content {
+    min-height: 52px;
+    height: auto;
 }

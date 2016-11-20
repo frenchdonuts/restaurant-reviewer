@@ -11,10 +11,13 @@ type Msg
       -- Initialization
     | OnInitErr String
     | OnInitSuc Geolocation.Location
-      -- API Restaurant Request
+      -- Restaurants API Request
     | FetchRestaurants
     | OnFetchRestaurantsErr String
     | OnFetchRestaurantsSuc (List RestaurantPreview)
+      -- Restaurant API Response
+    | OnFetchRestaurantErr String
+    | OnFetchRestaurantSuc Restaurant
       -- Cuisine Selector (Autocomplete)
     | CuisineAutocomplete Autocomplete.Msg
       -- Price Selector
@@ -25,4 +28,5 @@ type Msg
       -- Restaurant List
     | OnRestaurantClick RestaurantPreview
     | MouseEnterRestaurantCard (Maybe Int)
+    | OnTimezoneOffsetFetched Int
     | Mdl (Material.Msg Msg)

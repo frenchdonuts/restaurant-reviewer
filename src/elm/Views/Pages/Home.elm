@@ -22,7 +22,6 @@ import Material.Color as Color
 cuisineAutocompleteViewConfig : Autocomplete.ViewConfig Cuisine
 cuisineAutocompleteViewConfig =
     let
-        -- TODO: Give appropriate attributes for when keySelected or mouseSelected
         customLi keySelected mouseSelected cuisine =
             { attributes =
                 [ Attr.classList
@@ -118,10 +117,6 @@ view model =
                             [ text "Search" ]
                         ]
                     ]
-                  --                , cell
-                  --[ size Desktop 4, size Tablet 4, size Phone 4, offset Desktop 4, offset Tablet 2 ]
-                  --[
-                  --]
                 , cell
                     [ size Desktop 10
                     , offset Desktop 1
@@ -184,6 +179,7 @@ restaurantCard { indexOfElevatedCard } i r =
             , elevation
             , Options.attribute <| Events.onMouseEnter <| MouseEnterRestaurantCard (Just i)
             , Options.attribute <| Events.onMouseLeave <| MouseEnterRestaurantCard Nothing
+            , Options.attribute <| Events.onClick <| OnRestaurantClick r
             ]
             [ Card.title
                 [ Options.attribute <| Attr.tabindex 0
