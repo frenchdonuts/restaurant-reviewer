@@ -76,7 +76,7 @@ decodeRestaurant =
         ("formatted_address" := Json.string)
         ("reviews" := Json.list decodeReview)
         ("rating" := Json.float)
-        ("opening_hours" := Json.maybe ("periods" := Json.list decodePeriod))
+        (Json.maybe ("opening_hours" := ("periods" := Json.list decodePeriod)))
 
 
 decodePeriod : Json.Decoder Period

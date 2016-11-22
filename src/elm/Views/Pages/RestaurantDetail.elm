@@ -2,10 +2,11 @@ module Views.Pages.RestaurantDetail exposing (view)
 
 import Model exposing (Model)
 import Types exposing (Restaurant, Review, Rating(..), Period)
-import Views.Helpers exposing (ratingToString, dayTimeToString, dayToString, periodToString)
+import Views.Helpers exposing (ratingToInt, ratingToString, dayTimeToString, dayToString, periodToString)
 import Msg exposing (..)
 import Html exposing (Html, div, text, img)
 import Html.Attributes as Attrs
+import Html.Events as Events
 import Material.Grid exposing (grid, cell, size, offset, Device(..))
 import Material.Textfield as Textfield
 import Material.List as List
@@ -171,7 +172,9 @@ newReviewAndCurrentRating r m =
             [ size All 6 ]
             [ newReview r m ]
         , cell
-            [ size All 6 ]
+            [ size All 6
+            , css "padding" "5% 0"
+            ]
             [ sexyRating r m ]
         ]
 
@@ -180,46 +183,66 @@ newReviewAndCurrentRating r m =
 -}
 newReview : Restaurant -> Model -> Html Msg
 newReview r m =
-    Options.div
-        [ css "padding" "15px 8% 0 8%"
-        , css "min-height" "300px"
+    grid
+        [ --css "padding" "15px 8% 0 8%"
+          css "min-height" "300px"
         ]
-        [ Textfield.render Mdl
-            [ 1 ]
-            m.mdl
-            [ Textfield.label "Name "
-            , Textfield.text'
-            , css "width" "100%"
+        [ cell [ size All 12 ]
+            [ Textfield.render
+                Mdl
+                [ 1 ]
+                m.mdl
+                [ Textfield.label "Name "
+                , Textfield.text'
+                , css "width" "100%"
+                ]
             ]
-        , Textfield.render Mdl
-            [ 0 ]
-            m.mdl
-            [ Textfield.label "Your review"
-              --, Textfield.floatingLabel
-            , Textfield.textarea
-            , Textfield.rows 3
-            , css "width" "100%"
-            , Options.inner [ css "resize" "none" ]
+        , cell [ size All 12 ]
+            [ Textfield.render Mdl
+                [ 0 ]
+                m.mdl
+                [ Textfield.label "Your review"
+                  --, Textfield.floatingLabel
+                , Textfield.textarea
+                , Textfield.rows 3
+                , css "width" "100%"
+                , Options.inner [ css "resize" "none" ]
+                ]
             ]
-        , stars 48 Two
-        , Button.render Mdl
-            [ 2 ]
-            m.mdl
-            [ Button.raised
-            , Button.colored
+        , cell [ size All 12 ] [ stars 48 Two ]
+        , cell [ size All 12 ]
+            [ Button.render Mdl
+                [ 2 ]
+                m.mdl
+                [ Button.raised
+                , Button.colored
+                , css "width" "100%"
+                , css "margin-top" "8px"
+                ]
+                [ text "Add Review" ]
             ]
-            [ text "Save Review" ]
         ]
 
 
 stars : Int -> Rating -> Html Msg
 stars sizepx r =
     let
+        color i =
+            if i <= ratingToInt r then
+                Color.primary
+            else
+                Color.color Color.Grey Color.S400
+
         star i =
-            Icon.view
-                "star"
-                [ Color.text Color.primary
-                , css "font-size" <| toString sizepx ++ "px"
+            Options.span [ Options.attribute <| Events.onClick NoOp ]
+                [ Icon.view
+                    "star"
+                    [ Color.text (color i)
+                    , Typography.contrast 1.0
+                    , css "font-size" <| toString sizepx ++ "px"
+                    , css "width" "20%"
+                    , css "text-align" "center"
+                    ]
                 ]
     in
         Options.div
@@ -241,7 +264,7 @@ sexyRating r m =
         Options.div
             [ Typography.display4
             , Typography.contrast 1.0
-              --, css "margin-right" "24px"
+            , css "padding" "10% 0"
             , css "text-align" "center"
             , css "font-size" <| toString sizepx ++ "px"
             ]
