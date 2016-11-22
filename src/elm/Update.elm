@@ -5,17 +5,17 @@ import Model exposing (..)
 import Msg exposing (..)
 import Api exposing (..)
 import Nav
-import Helper exposing (cuisines, cuisineString, cuisineStringInverse, prices)
+import Helper exposing (cuisines, cuisineString, cuisineStringInverse, prices, intToRating, isJust)
 import Components.Autocomplete as Autocomplete
 import Task exposing (..)
-
-
--- (Task, perform, onError, andThen)
-
+import Maybe
+import Dict
 import Navigation
 import Geolocation exposing (now)
 import Material
 import Material.Layout as Layout
+import Time.DateTime as Time
+import Time as CoreTime
 
 
 init : ( Model, Cmd Msg )
@@ -32,6 +32,8 @@ init =
     , openNow = False
     , indexOfElevatedCard = Nothing
     , selectedRestaurant = Nothing
+    , newReview = initNewReview
+    , newReviews = Dict.empty
     , timezoneOffset = 0
     }
         ! [ Task.perform OnInitErr OnInitSuc initTask, Layout.sub0 Mdl ]
@@ -53,6 +55,8 @@ mockRestaurantDetailInit =
             , openNow = False
             , indexOfElevatedCard = Nothing
             , selectedRestaurant = Nothing
+            , newReview = initNewReview
+            , newReviews = Dict.empty
             , timezoneOffset = 0
             }
     in
@@ -115,7 +119,7 @@ port setTimezoneOffset : (Int -> msg) -> Sub msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     let
-        { cuisineAutocomplete } =
+        { cuisineAutocomplete, newReview } =
             model
     in
         case msg of
@@ -240,6 +244,72 @@ update msg model =
 
             MouseEnterRestaurantCard maybeIndex ->
                 { model | indexOfElevatedCard = maybeIndex } ! []
+
+            OnUpdateNewReview msg ->
+                let
+                    newReview' =
+                        case msg of
+                            UpdateName name ->
+                                { newReview | authorName = name }
+
+                            UpdateTime dateTime ->
+                                { newReview | time = Just dateTime }
+
+                            UpdateRating rating ->
+                                { newReview | rating = intToRating rating }
+
+                            UpdateText text ->
+                                { newReview | text = text }
+                in
+                    { model | newReview = newReview' } ! []
+
+            OnNewReviewSubmitBtnPressed ->
+                let
+                    selectedRestaurantId =
+                        Maybe.map (.id) model.selectedRestaurant
+                            |> Maybe.withDefault
+                                (Debug.log
+                                    "ERR: Inconsistent state. We are trying to add a NewReview but we have not selected a Restaurant to associate it with"
+                                    ""
+                                )
+
+                    validateNewReview { authorName, rating, text } =
+                        (authorName /= "")
+                            && (isJust rating)
+                            && (text /= "")
+                in
+                    if validateNewReview newReview then
+                        model ! [ Task.perform (\_ -> NoOp) (ValidNewReviewSubmitted newReview) CoreTime.now ]
+                    else
+                        { model
+                            | newReview = Debug.log "Invalid NewReview" newReview
+                        }
+                            ! []
+
+            ValidNewReviewSubmitted newReview time ->
+                let
+                    selectedRestaurantId =
+                        Maybe.map (.id) model.selectedRestaurant
+                            |> Maybe.withDefault
+                                (Debug.log
+                                    "ERR: Inconsistent state. We are trying to add a NewReview but we have not selected a Restaurant to associate it with"
+                                    ""
+                                )
+
+                    newReviewWithTime =
+                        { newReview | time = Just (Time.fromTimestamp time) }
+
+                    addNewReviewToRestaurant id newReview' dict =
+                        if Dict.member id dict then
+                            Dict.update id (Maybe.map (\listOfNewReviews -> newReview' :: listOfNewReviews)) dict
+                        else
+                            Dict.insert id [ newReview' ] dict
+                in
+                    { model
+                        | newReview = initNewReview
+                        , newReviews = addNewReviewToRestaurant selectedRestaurantId newReviewWithTime model.newReviews
+                    }
+                        ! []
 
             OnTimezoneOffsetFetched offsetInMin ->
                 { model | timezoneOffset = Debug.log "offsetInMs" offsetInMin } ! []

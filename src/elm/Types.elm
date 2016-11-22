@@ -74,6 +74,23 @@ type alias Review =
     }
 
 
+type alias NewReview =
+    { authorName : String
+    , time : Maybe Time.DateTime
+    , rating : Maybe Rating
+    , text : String
+    }
+
+
+initNewReview : NewReview
+initNewReview =
+    { authorName = ""
+    , time = Nothing
+    , rating = Nothing
+    , text = ""
+    }
+
+
 type Rating
     = One
     | Two

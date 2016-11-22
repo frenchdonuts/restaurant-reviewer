@@ -2,6 +2,7 @@ module Views.Pages.RestaurantDetail exposing (view)
 
 import Model exposing (Model)
 import Types exposing (Restaurant, Review, Rating(..), Period)
+import Helper exposing (isJust)
 import Views.Helpers exposing (ratingToInt, ratingToString, dayTimeToString, dayToString, periodToString)
 import Msg exposing (..)
 import Html exposing (Html, div, text, img)
@@ -17,6 +18,7 @@ import Material.Icon as Icon
 import Material.Elevation as Elevation
 import Material.Typography as Typography
 import Time.DateTime as Time
+import Dict
 
 
 view : Model -> Html Msg
@@ -183,58 +185,68 @@ newReviewAndCurrentRating r m =
 -}
 newReview : Restaurant -> Model -> Html Msg
 newReview r m =
-    grid
-        [ --css "padding" "15px 8% 0 8%"
-          css "min-height" "300px"
-        ]
-        [ cell [ size All 12 ]
-            [ Textfield.render
-                Mdl
-                [ 1 ]
-                m.mdl
-                [ Textfield.label "Name "
-                , Textfield.text'
-                , css "width" "100%"
+    let
+        { newReview } =
+            m
+    in
+        grid
+            [ css "min-height" "300px"
+            ]
+            [ cell [ size All 12 ]
+                [ Textfield.render
+                    Mdl
+                    [ 1 ]
+                    m.mdl
+                    [ Textfield.label "Name "
+                    , Textfield.text'
+                    , Textfield.value newReview.authorName
+                    , Textfield.onInput <| OnUpdateNewReview << UpdateName
+                    , css "width" "100%"
+                    ]
+                ]
+            , cell [ size All 12 ]
+                [ Textfield.render Mdl
+                    [ 0 ]
+                    m.mdl
+                    [ Textfield.label "Your review"
+                    , Textfield.textarea
+                    , Textfield.rows 3
+                    , Textfield.value newReview.text
+                    , Textfield.onInput <| OnUpdateNewReview << UpdateText
+                    , css "width" "100%"
+                    , Options.inner [ css "resize" "none" ]
+                    ]
+                ]
+            , cell [ size All 12 ] [ stars 48 newReview.rating ]
+            , cell [ size All 12 ]
+                [ Button.render Mdl
+                    [ 2 ]
+                    m.mdl
+                    [ Button.onClick OnNewReviewSubmitBtnPressed
+                    , Button.raised
+                    , Button.colored
+                    , css "width" "100%"
+                    , css "margin-top" "8px"
+                    ]
+                    [ text "Add Review" ]
                 ]
             ]
-        , cell [ size All 12 ]
-            [ Textfield.render Mdl
-                [ 0 ]
-                m.mdl
-                [ Textfield.label "Your review"
-                  --, Textfield.floatingLabel
-                , Textfield.textarea
-                , Textfield.rows 3
-                , css "width" "100%"
-                , Options.inner [ css "resize" "none" ]
-                ]
-            ]
-        , cell [ size All 12 ] [ stars 48 Two ]
-        , cell [ size All 12 ]
-            [ Button.render Mdl
-                [ 2 ]
-                m.mdl
-                [ Button.raised
-                , Button.colored
-                , css "width" "100%"
-                , css "margin-top" "8px"
-                ]
-                [ text "Add Review" ]
-            ]
-        ]
 
 
-stars : Int -> Rating -> Html Msg
+stars : Int -> Maybe Rating -> Html Msg
 stars sizepx r =
     let
         color i =
-            if i <= ratingToInt r then
+            if (isJust r) && i <= (r |> Maybe.map ratingToInt >> Maybe.withDefault 0) then
                 Color.primary
             else
                 Color.color Color.Grey Color.S400
 
         star i =
-            Options.span [ Options.attribute <| Events.onClick NoOp ]
+            Options.span
+                [ Options.attribute << Events.onClick << OnUpdateNewReview << UpdateRating <| i
+                , Options.attribute << Events.onMouseEnter << OnUpdateNewReview << UpdateRating <| i
+                ]
                 [ Icon.view
                     "star"
                     [ Color.text (color i)
@@ -286,10 +298,31 @@ userReviews r m =
     let
         { id, name, photos, address, reviews, avgRating, openingHours } =
             r
+
+        { newReviews } =
+            m
+
+        newReviewToReview newReview =
+            { authorName = newReview.authorName
+            , time = Maybe.withDefault Time.epoch newReview.time
+            , rating = Maybe.withDefault One newReview.rating
+            , text = newReview.text
+            }
+
+        userReviews =
+            case Dict.get id newReviews of
+                Just reviews ->
+                    List.map newReviewToReview reviews
+
+                Nothing ->
+                    []
+
+        allReviews =
+            userReviews ++ reviews
     in
         List.ul
             []
-            (List.map (flip userReview m) reviews)
+            (List.map (flip userReview m) allReviews)
 
 
 {-|

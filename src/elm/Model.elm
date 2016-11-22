@@ -4,6 +4,7 @@ import Types exposing (..)
 import Geolocation
 import Material
 import Components.Autocomplete as Autocomplete
+import Dict
 
 
 type alias Model =
@@ -18,6 +19,8 @@ type alias Model =
     , openNow : Bool
     , indexOfElevatedCard : Maybe Int
     , selectedRestaurant : Maybe Restaurant
+    , newReviews : Dict.Dict String (List NewReview)
+    , newReview : NewReview
     , mdl : Material.Model
     , timezoneOffset : Int
     }

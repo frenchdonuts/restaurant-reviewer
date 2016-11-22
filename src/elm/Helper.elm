@@ -179,3 +179,40 @@ cuisineStringInverse id =
 
         _ ->
             NoPreference
+
+
+intToRating : Int -> Maybe Rating
+intToRating i =
+    case i of
+        1 ->
+            Just One
+
+        2 ->
+            Just Two
+
+        3 ->
+            Just Three
+
+        4 ->
+            Just Four
+
+        5 ->
+            Just Five
+
+        _ ->
+            Nothing
+
+
+isJust : Maybe a -> Bool
+isJust m =
+    case m of
+        Just _ ->
+            True
+
+        _ ->
+            False
+
+
+isNothing : Maybe a -> Bool
+isNothing =
+    not << isJust

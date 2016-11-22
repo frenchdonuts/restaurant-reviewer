@@ -4,6 +4,8 @@ import Types exposing (..)
 import Geolocation
 import Material
 import Components.Autocomplete as Autocomplete
+import Time.DateTime as Time
+import Time as CoreTime
 
 
 type Msg
@@ -18,15 +20,26 @@ type Msg
       -- Restaurant API Response
     | OnFetchRestaurantErr String
     | OnFetchRestaurantSuc Restaurant
-      -- Cuisine Selector (Autocomplete)
+      -- Cuisine Selector (Autocomplete, Home page)
     | CuisineAutocomplete Autocomplete.Msg
-      -- Price Selector
+      -- Price Selector (Home page)
     | ToggleCasual
     | ToggleFancy
-      -- Open now toggle
+      -- Open now toggle (Home page)
     | ToggleOpenNow
-      -- Restaurant List
+      -- Restaurant List (Home page)
     | OnRestaurantClick RestaurantPreview
     | MouseEnterRestaurantCard (Maybe Int)
+      -- Restaurant Detail page
+    | OnUpdateNewReview NewReviewMsg
+    | OnNewReviewSubmitBtnPressed
+    | ValidNewReviewSubmitted NewReview CoreTime.Time
     | OnTimezoneOffsetFetched Int
     | Mdl (Material.Msg Msg)
+
+
+type NewReviewMsg
+    = UpdateName String
+    | UpdateTime Time.DateTime
+    | UpdateRating Int
+    | UpdateText String
