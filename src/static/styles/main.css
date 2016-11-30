@@ -18,3 +18,8 @@ label.mdl-textfield__label {
     color: rgb(118,118,118);
     opacity: 1;
 }
+
+/* Make sure keyboard focus is visible on our buttons */
+button.mdl-js-button.mdl-button.mdl-button--icon:focus {
+    outline: 2px solid rgb(255,193,7)
+}

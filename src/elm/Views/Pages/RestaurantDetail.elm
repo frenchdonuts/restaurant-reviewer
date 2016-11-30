@@ -394,12 +394,6 @@ sexyRating r m =
 
         sizepx =
             160
-
-        starOrStars =
-            if avgRating == 1.0 then
-                "star"
-            else
-                "stars"
     in
         Options.div
             [ Typography.display4
@@ -409,18 +403,14 @@ sexyRating r m =
             , css "font-size" <| toString sizepx ++ "px"
             , Options.attribute <| Attrs.attribute "role" "textbox"
             , Options.attribute <| Attrs.attribute "aria-readonly" "true"
-            , Options.attribute << Attrs.attribute "aria-label" <| (toString avgRating) ++ " " ++ starOrStars
             ]
-            [ Options.span
-                [ Options.attribute <| Attrs.attribute "aria-hidden" "true" ]
-                [ Html.text <| (toStringf avgRating)
-                , Icon.view
-                    "star"
-                    [ Color.text Color.primary
-                    , css "font-size" <| toString sizepx ++ "px"
-                    , css "position" "relative"
-                    , css "top" "18px"
-                    ]
+            [ Html.text <| (toStringf avgRating)
+            , Icon.view
+                "star"
+                [ Color.text Color.primary
+                , css "font-size" <| toString sizepx ++ "px"
+                , css "position" "relative"
+                , css "top" "18px"
                 ]
             ]
 
@@ -477,12 +467,6 @@ userReview review m =
                 ++ (localTime |> Time.day >> toString)
                 ++ "/"
                 ++ (localTime |> Time.year >> toString)
-
-        starOrStars =
-            if rating == One then
-                "star"
-            else
-                "stars"
     in
         List.li
             [ List.withBody
@@ -505,17 +489,13 @@ userReview review m =
                         , css "color" "rgb(89,89,89)"
                         , Options.attribute <| Attrs.attribute "role" "textbox"
                         , Options.attribute <| Attrs.attribute "aria-readonly" "true"
-                        , Options.attribute << Attrs.attribute "aria-label" <| (ratingToString rating) ++ " " ++ starOrStars
                         ]
-                        [ Options.span
-                            [ Options.attribute <| Attrs.attribute "aria-hidden" "true" ]
-                            [ Html.text <| (ratingToString rating)
-                            , Icon.view
-                                "star"
-                                [ Color.text Color.primary
-                                , css "position" "relative"
-                                , css "top" "5px"
-                                ]
+                        [ Html.text <| (ratingToString rating)
+                        , Icon.view
+                            "star"
+                            [ Color.text Color.primary
+                            , css "position" "relative"
+                            , css "top" "5px"
                             ]
                         ]
                     , Options.span
