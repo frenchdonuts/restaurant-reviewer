@@ -2,10 +2,11 @@ module Views.Pages.RestaurantDetail exposing (view)
 
 import Model exposing (Model)
 import Types exposing (Restaurant, Review, Rating(..), Period)
-import Helper exposing (isJust)
-import Views.Helpers exposing (ratingToInt, ratingToString, dayTimeToString, dayToString, periodToString)
+import Views.Helpers exposing (ratingToString, dayTimeToString, dayToString, periodToString, onKeyUp, toStringf)
+import Helper exposing (ratingToInt)
 import Msg exposing (..)
-import Html exposing (Html, div, text, img)
+import Zipper1D as Zipper
+import Html exposing (Html, div, text, img, button)
 import Html.Attributes as Attrs
 import Html.Events as Events
 import Material.Grid exposing (grid, cell, size, offset, Device(..))
@@ -38,29 +39,30 @@ view model =
         view
 
 
+{-| A set of CSS properties to move an element off-screen
+-}
+invisible : Html.Attribute msg
+invisible =
+    Attrs.style [ ( "position", "absolute" ), ( "top", "-999999px" ) ]
+
+
 restaurantView : Restaurant -> Model -> Html Msg
 restaurantView r m =
     let
-        sections =
-            [ header r m
-            , newReview r m
-            , userReviews r m
-            ]
-
         view =
             grid [] << List.map (\section -> cell [ size All 12, css "min-height" "33%", css "border" (Color.hueName Color.Grey) ] [ section ])
     in
         grid []
-            [ cell [ size Desktop 10, offset Desktop 1, size Tablet 8, size Phone 4 ]
+            [ cell [ size Desktop 8, offset Desktop 2, size Tablet 8, size Phone 4 ]
                 [ (Options.styled' div)
                     [ css "position" "relative"
                     , css "min-height" "800px"
-                      --, css "margin" "4% 24% 4% 24%"
                     , Elevation.e2
                     ]
                     []
                     [ header r m
                     , newReviewAndCurrentRating r m
+                    , Html.h2 [ invisible ] [ Html.text "User Reviews" ]
                     , userReviews r m
                     ]
                 ]
@@ -79,13 +81,8 @@ header r m =
         { id, name, photos, address, reviews, avgRating, openingHours } =
             r
 
-        backgroundPhoto =
-            case List.head photos of
-                Just url ->
-                    css "background-image" ("url('" ++ url ++ "') ")
-
-                Nothing ->
-                    css "background-image" "url('assets/pomegranate.jpg')"
+        { src, alt } =
+            Zipper.current photos
 
         openingHoursToday =
             case openingHours of
@@ -116,27 +113,100 @@ header r m =
                 , css "margin-left" "10px"
                 ]
                 [ text string ]
+
+        prevPhotoBtn =
+            let
+                sizepx =
+                    40
+            in
+                Button.render Mdl
+                    [ 5 ]
+                    m.mdl
+                    [ Button.plain
+                    , Button.icon
+                    , Button.onClick PrevPhoto
+                    , css "position" "absolute"
+                    , css "top" "126px"
+                    , css "left" "0"
+                    , css "width" (toString sizepx ++ "px")
+                    , css "height" (toString sizepx ++ "px")
+                    ]
+                    [ Icon.view "navigate_before"
+                        [ css "font-size" (toString sizepx ++ "px")
+                        , css "line-height" (toString sizepx ++ "px")
+                        , css "transform" ("translate(-" ++ (toString <| sizepx / 2) ++ "px,-" ++ (toString <| sizepx / 2) ++ "px)")
+                        , Color.text Color.white
+                        ]
+                    ]
+
+        nextPhotoBtn =
+            let
+                sizepx =
+                    40
+            in
+                Button.render Mdl
+                    [ 6 ]
+                    m.mdl
+                    [ Button.plain
+                    , Button.icon
+                    , Button.onClick NextPhoto
+                    , css "position" "absolute"
+                    , css "top" "126px"
+                    , css "right" "0"
+                    , css "width" (toString sizepx ++ "px")
+                    , css "height" (toString sizepx ++ "px")
+                    ]
+                    [ Icon.view "navigate_next"
+                        [ css "font-size" (toString sizepx ++ "px")
+                        , css "line-height" (toString sizepx ++ "px")
+                        , css "transform" ("translate(-" ++ (toString <| sizepx / 2) ++ "px,-" ++ (toString <| sizepx / 2) ++ "px)")
+                        , Color.text Color.white
+                        ]
+                    ]
     in
         Options.div
             [ css "min-height" "300px"
-            , css "background-image" "url('static/img/q_restaurant.jpg')"
-              -- backgroundPhoto
             , css "background-color" "black"
-            , css "background-repeat" "no-repeat"
-            , css "background-position" "center"
             , css "position" "relative"
             ]
-            [ Options.div
+            [ Html.img
+                [ Attrs.id "restaurant-img"
+                , Attrs.attribute "aria-live" "polite"
+                , Attrs.attribute "aria-atomic" "true"
+                , Attrs.attribute "aria-relevant" "text"
+                , Attrs.src src
+                , Attrs.alt <| "Image " ++ toString (Zipper.index photos) ++ ": " ++ alt
+                , Attrs.style
+                    [ ( "position", "absolute" )
+                    , ( "top", "0" )
+                    , ( "bottom", "0" )
+                    , ( "left", "0" )
+                    , ( "right", "0" )
+                    , ( "height", "100%" )
+                    , ( "margin", "auto" )
+                    , ( "z-index", "0" )
+                    ]
+                ]
+                []
+            , Options.div
                 [ css "width" "100%"
                 , css "height" "100px"
                 , Options.scrim 0.75
                 , css "position" "absolute"
                 , css "bottom" "0"
                 , Color.text Color.white
+                , css "z-index" "2"
                 ]
-                [ title name
+                [ Html.h2 [ invisible ] [ Html.text <| "Details on " ++ r.name ]
+                , title name
                 , subhead address
                 , subhead openingHoursToday
+                ]
+            , Html.fieldset
+                [ Attrs.attribute "aria-controls" "restaurant-img"
+                ]
+                [ prevPhotoBtn
+                , nextPhotoBtn
                 ]
             ]
 
@@ -171,13 +241,17 @@ newReviewAndCurrentRating r m =
     grid
         [ css "min-height" "300px" ]
         [ cell
-            [ size All 6 ]
+            [ size Desktop 6, size Tablet 4, size Phone 4 ]
             [ newReview r m ]
         , cell
-            [ size All 6
+            [ size Desktop 6
+            , size Tablet 4
+            , size Phone 4
             , css "padding" "5% 0"
             ]
-            [ sexyRating r m ]
+            [ Html.h2 [ invisible ] [ Html.text "Overall rating" ]
+            , sexyRating r m
+            ]
         ]
 
 
@@ -193,7 +267,8 @@ newReview r m =
             [ css "min-height" "300px"
             ]
             [ cell [ size All 12 ]
-                [ Textfield.render
+                [ Html.h2 [ invisible ] [ Html.text "New Review" ]
+                , Textfield.render
                     Mdl
                     [ 1 ]
                     m.mdl
@@ -202,22 +277,37 @@ newReview r m =
                     , Textfield.value newReview.authorName
                     , Textfield.onInput <| OnUpdateNewReview << UpdateName
                     , css "width" "100%"
+                    , Options.inner
+                        [ Options.attribute <| Attrs.attribute "aria-labelledby" "nameinput-label"
+                        , Options.attribute <| Attrs.name "your name"
+                        ]
                     ]
+                , Html.span
+                    [ Attrs.id "nameinput-label", Attrs.hidden True ]
+                    [ Html.text "Your name" ]
                 ]
             , cell [ size All 12 ]
                 [ Textfield.render Mdl
                     [ 0 ]
                     m.mdl
-                    [ Textfield.label "Your review"
+                    [ Textfield.label "Comments"
                     , Textfield.textarea
                     , Textfield.rows 3
                     , Textfield.value newReview.text
                     , Textfield.onInput <| OnUpdateNewReview << UpdateText
                     , css "width" "100%"
-                    , Options.inner [ css "resize" "none" ]
+                    , Options.inner
+                        [ css "resize" "none"
+                        , Options.attribute <| Attrs.attribute "aria-labelledby" "commentsinput-label"
+                        , Options.attribute <| Attrs.name "comments"
+                        , Options.attribute <| Attrs.attribute "aria-multiline" "true"
+                        ]
                     ]
+                , Html.span
+                    [ Attrs.id "commentsinput-label", Attrs.hidden True ]
+                    [ Html.text "Comments" ]
                 ]
-            , cell [ size All 12 ] [ stars 48 newReview.rating ]
+            , cell [ size All 12 ] [ stars 48 newReview.rating m ]
             , cell [ size All 12 ]
                 [ Button.render Mdl
                     [ 2 ]
@@ -227,39 +317,71 @@ newReview r m =
                     , Button.colored
                     , css "width" "100%"
                     , css "margin-top" "8px"
+                    , css "text-transform" "none"
                     ]
                     [ text "Add Review" ]
                 ]
             ]
 
 
-stars : Int -> Maybe Rating -> Html Msg
-stars sizepx r =
+stars : Int -> Rating -> Model -> Html Msg
+stars sizepx r m =
     let
+        tabindex i =
+            if i == One then
+                [ Attrs.tabindex 0 ]
+            else
+                []
+
         color i =
-            if (isJust r) && i <= (r |> Maybe.map ratingToInt >> Maybe.withDefault 0) then
+            if i `Helper.lte` r then
                 Color.primary
             else
                 Color.color Color.Grey Color.S400
 
+        starOrstars i =
+            if i == One then
+                " star"
+            else
+                " stars"
+
         star i =
-            Options.span
-                [ Options.attribute << Events.onClick << OnUpdateNewReview << UpdateRating <| i
-                , Options.attribute << Events.onMouseEnter << OnUpdateNewReview << UpdateRating <| i
+            Html.label
+                [ Attrs.style
+                    [ ( "width", "20%" )
+                    , ( "display", "inline-block" )
+                    ]
                 ]
-                [ Icon.view
+                [ Html.input
+                    ([ Attrs.type' "radio"
+                     , Attrs.name "rating"
+                     , Attrs.value <| ratingToString i
+                     , Attrs.title (ratingToString i ++ (starOrstars i))
+                     , Attrs.style [ ( "left", "-999999px" ), ( "position", "absolute" ) ]
+                     , Events.onCheck
+                        (\checked ->
+                            if checked then
+                                OnUpdateNewReview (UpdateRating i)
+                            else
+                                NoOp
+                        )
+                     , Attrs.checked (r == i)
+                     ]
+                        ++ (tabindex i)
+                    )
+                    []
+                , Icon.view
                     "star"
                     [ Color.text (color i)
                     , Typography.contrast 1.0
                     , css "font-size" <| toString sizepx ++ "px"
-                    , css "width" "20%"
-                    , css "text-align" "center"
+                    , css "cursor" "pointer"
                     ]
                 ]
     in
         Options.div
-            []
-            (List.map star [1..5])
+            [ css "text-align" "center" ]
+            (List.map star [ One, Two, Three, Four, Five ])
 
 
 {-|
@@ -272,6 +394,12 @@ sexyRating r m =
 
         sizepx =
             160
+
+        starOrStars =
+            if avgRating == 1.0 then
+                "star"
+            else
+                "stars"
     in
         Options.div
             [ Typography.display4
@@ -279,14 +407,20 @@ sexyRating r m =
             , css "padding" "10% 0"
             , css "text-align" "center"
             , css "font-size" <| toString sizepx ++ "px"
+            , Options.attribute <| Attrs.attribute "role" "textbox"
+            , Options.attribute <| Attrs.attribute "aria-readonly" "true"
+            , Options.attribute << Attrs.attribute "aria-label" <| (toString avgRating) ++ " " ++ starOrStars
             ]
-            [ Html.text <| (toString avgRating)
-            , Icon.view
-                "star"
-                [ Color.text Color.primary
-                , css "font-size" <| toString sizepx ++ "px"
-                , css "position" "relative"
-                , css "top" "18px"
+            [ Options.span
+                [ Options.attribute <| Attrs.attribute "aria-hidden" "true" ]
+                [ Html.text <| (toStringf avgRating)
+                , Icon.view
+                    "star"
+                    [ Color.text Color.primary
+                    , css "font-size" <| toString sizepx ++ "px"
+                    , css "position" "relative"
+                    , css "top" "18px"
+                    ]
                 ]
             ]
 
@@ -305,7 +439,7 @@ userReviews r m =
         newReviewToReview newReview =
             { authorName = newReview.authorName
             , time = Maybe.withDefault Time.epoch newReview.time
-            , rating = Maybe.withDefault One newReview.rating
+            , rating = newReview.rating
             , text = newReview.text
             }
 
@@ -343,13 +477,24 @@ userReview review m =
                 ++ (localTime |> Time.day >> toString)
                 ++ "/"
                 ++ (localTime |> Time.year >> toString)
+
+        starOrStars =
+            if rating == One then
+                "star"
+            else
+                "stars"
     in
         List.li
             [ List.withBody
             ]
             [ List.content []
                 [ Html.text authorName
-                , Options.span [ Typography.caption ] [ Html.text <| " on " ++ formatedLocalTime ]
+                , Options.span
+                    [ Typography.caption
+                    , css "color" "rgb(118,118,118)"
+                    , css "opacity" "1"
+                    ]
+                    [ Html.text <| " on " ++ formatedLocalTime ]
                 , List.body
                     [ css "min-height" "52px"
                     , css "height" "auto"
@@ -357,16 +502,26 @@ userReview review m =
                     [ Options.span
                         [ css "font-weight" "600"
                         , css "margin-right" "8px"
+                        , css "color" "rgb(89,89,89)"
+                        , Options.attribute <| Attrs.attribute "role" "textbox"
+                        , Options.attribute <| Attrs.attribute "aria-readonly" "true"
+                        , Options.attribute << Attrs.attribute "aria-label" <| (ratingToString rating) ++ " " ++ starOrStars
                         ]
-                        [ Html.text <| (ratingToString rating)
-                        , Icon.view
-                            "star"
-                            [ Color.text Color.primary
-                            , css "position" "relative"
-                            , css "top" "5px"
+                        [ Options.span
+                            [ Options.attribute <| Attrs.attribute "aria-hidden" "true" ]
+                            [ Html.text <| (ratingToString rating)
+                            , Icon.view
+                                "star"
+                                [ Color.text Color.primary
+                                , css "position" "relative"
+                                , css "top" "5px"
+                                ]
                             ]
                         ]
-                    , Options.span [] [ Html.text text ]
+                    , Options.span
+                        [ css "color" "rgb(89,89,89)"
+                        ]
+                        [ Html.text text ]
                     ]
                 ]
             ]

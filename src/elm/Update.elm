@@ -6,6 +6,7 @@ import Msg exposing (..)
 import Api exposing (..)
 import Nav
 import Helper exposing (cuisines, cuisineString, cuisineStringInverse, prices, intToRating, isJust)
+import Zipper1D as Zipper
 import Components.Autocomplete as Autocomplete
 import Task exposing (..)
 import Maybe
@@ -119,7 +120,7 @@ port setTimezoneOffset : (Int -> msg) -> Sub msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     let
-        { cuisineAutocomplete, newReview } =
+        { cuisineAutocomplete, selectedRestaurant, newReview } =
             model
     in
         case msg of
@@ -245,21 +246,35 @@ update msg model =
             MouseEnterRestaurantCard maybeIndex ->
                 { model | indexOfElevatedCard = maybeIndex } ! []
 
+            PrevPhoto ->
+                let
+                    selectedRestaurant' =
+                        Maybe.map (\restaurant -> { restaurant | photos = Zipper.backward restaurant.photos }) selectedRestaurant
+                in
+                    { model | selectedRestaurant = selectedRestaurant' } ! []
+
+            NextPhoto ->
+                let
+                    selectedRestaurant' =
+                        Maybe.map (\restaurant -> { restaurant | photos = Zipper.forward restaurant.photos }) selectedRestaurant
+                in
+                    { model | selectedRestaurant = selectedRestaurant' } ! []
+
             OnUpdateNewReview msg ->
                 let
-                    newReview' =
+                    ( newReview', cmd ) =
                         case msg of
                             UpdateName name ->
-                                { newReview | authorName = name }
+                                { newReview | authorName = name } ! []
 
                             UpdateTime dateTime ->
-                                { newReview | time = Just dateTime }
+                                { newReview | time = Just dateTime } ! []
 
                             UpdateRating rating ->
-                                { newReview | rating = intToRating rating }
+                                { newReview | rating = rating } ! []
 
                             UpdateText text ->
-                                { newReview | text = text }
+                                { newReview | text = text } ! []
                 in
                     { model | newReview = newReview' } ! []
 
@@ -273,9 +288,8 @@ update msg model =
                                     ""
                                 )
 
-                    validateNewReview { authorName, rating, text } =
+                    validateNewReview { authorName, text } =
                         (authorName /= "")
-                            && (isJust rating)
                             && (text /= "")
                 in
                     if validateNewReview newReview then

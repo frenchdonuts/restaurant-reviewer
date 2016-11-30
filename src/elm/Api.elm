@@ -3,6 +3,7 @@ module Api exposing (getRestaurants, getRestaurant, mockGetRestaurant)
 import Model exposing (..)
 import Types exposing (..)
 import Helper
+import Zipper1D as Zipper
 import Components.Autocomplete exposing (getSelectedDatum)
 import Task
 import Http
@@ -69,14 +70,33 @@ getRestaurant id =
 
 decodeRestaurant : Json.Decoder Restaurant
 decodeRestaurant =
-    Json.object7 Restaurant
-        ("id" := Json.string)
-        ("name" := Json.string)
-        ("photos" := (Json.list <| Json.map toPhotoUrl ("photo_reference" := Json.string)))
-        ("formatted_address" := Json.string)
-        ("reviews" := Json.list decodeReview)
-        ("rating" := Json.float)
-        (Json.maybe ("opening_hours" := ("periods" := Json.list decodePeriod)))
+    let
+        createZipperOfPhotos photos =
+            let
+                noPhotosAvailableAssetUrl =
+                    ""
+
+                imgs =
+                    List.map (\src -> Img src "Restaurant image. No description available") photos
+            in
+                case imgs of
+                    [] ->
+                        Zipper.zipper [] (Img noPhotosAvailableAssetUrl "No photos available for this restaurant.") []
+
+                    x :: xs ->
+                        Zipper.zipper [] x xs
+
+        decodeListOfPhotosAsZipper =
+            Json.map createZipperOfPhotos ("photos" := (Json.list <| Json.map toPhotoUrl ("photo_reference" := Json.string)))
+    in
+        Json.object7 Restaurant
+            ("id" := Json.string)
+            ("name" := Json.string)
+            decodeListOfPhotosAsZipper
+            ("formatted_address" := Json.string)
+            ("reviews" := Json.list decodeReview)
+            ("rating" := Json.float)
+            (Json.maybe ("opening_hours" := ("periods" := Json.list decodePeriod)))
 
 
 decodePeriod : Json.Decoder Period
@@ -204,11 +224,10 @@ toPhotoUrl reference =
 
 decodeRestaurantPreview : Json.Decoder RestaurantPreview
 decodeRestaurantPreview =
-    Json.object5 RestaurantPreview
+    Json.object4 RestaurantPreview
         ("place_id" := Json.string)
         ("name" := Json.string)
         ("types" := Json.list Json.string)
-        ("photos" := (Json.list <| Json.map toPhotoUrl ("photo_reference" := Json.string)))
         ("formatted_address" := Json.string)
 
 

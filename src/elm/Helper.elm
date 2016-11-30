@@ -181,26 +181,75 @@ cuisineStringInverse id =
             NoPreference
 
 
-intToRating : Int -> Maybe Rating
-intToRating i =
-    case i of
+incRating : Rating -> Rating
+incRating =
+    ratingToInt >> (+) 1 >> intToRating
+
+
+decRating : Rating -> Rating
+decRating =
+    ratingToInt >> (-) 1 >> intToRating
+
+
+lt : Rating -> Rating -> Bool
+lt r1 r2 =
+    let
+        z1 =
+            ratingToInt r1
+
+        z2 =
+            ratingToInt r2
+    in
+        z1 < z2
+
+
+lte : Rating -> Rating -> Bool
+lte r1 r2 =
+    (lt r1 r2) || (r1 == r2)
+
+
+intToRating : Int -> Rating
+intToRating z =
+    case z of
         1 ->
-            Just One
+            One
 
         2 ->
-            Just Two
+            Two
 
         3 ->
-            Just Three
+            Three
 
         4 ->
-            Just Four
+            Four
 
         5 ->
-            Just Five
+            Five
 
         _ ->
-            Nothing
+            if z < 1 then
+                One
+            else
+                Five
+
+
+ratingToInt : Rating -> Int
+ratingToInt rating =
+    case rating of
+        One ->
+            1
+
+        Two ->
+            2
+
+        Three ->
+            3
+
+        Four ->
+            4
+
+        Five ->
+            5
 
 
 isJust : Maybe a -> Bool

@@ -12,3 +12,9 @@ li.mdl-list__item--three-line {
     min-height: 52px;
     height: auto;
 }
+
+/* Make sure the contrast is high enough for input labels */
+label.mdl-textfield__label {
+    color: rgb(118,118,118);
+    opacity: 1;
+}

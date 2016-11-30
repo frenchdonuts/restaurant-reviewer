@@ -1,6 +1,26 @@
 module Views.Helpers exposing (..)
 
 import Types exposing (..)
+import Html exposing (Attribute)
+import Html.Events exposing (on, keyCode)
+import Json.Decode as Json
+
+
+toStringf : Float -> String
+toStringf f =
+    let
+        s =
+            toString f
+    in
+        if toFloat (ceiling f) == f then
+            s ++ ".0"
+        else
+            s
+
+
+onKeyUp : (Int -> msg) -> Attribute msg
+onKeyUp tagger =
+    on "keyup" (Json.map tagger keyCode)
 
 
 periodToString : Period -> String
@@ -88,22 +108,3 @@ ratingToString rating =
 
         Five ->
             "5"
-
-
-ratingToInt : Rating -> Int
-ratingToInt rating =
-    case rating of
-        One ->
-            1
-
-        Two ->
-            2
-
-        Three ->
-            3
-
-        Four ->
-            4
-
-        Five ->
-            5

@@ -31,6 +31,8 @@ type Msg
     | OnRestaurantClick RestaurantPreview
     | MouseEnterRestaurantCard (Maybe Int)
       -- Restaurant Detail page
+    | PrevPhoto
+    | NextPhoto
     | OnUpdateNewReview NewReviewMsg
     | OnNewReviewSubmitBtnPressed
     | ValidNewReviewSubmitted NewReview CoreTime.Time
@@ -41,5 +43,5 @@ type Msg
 type NewReviewMsg
     = UpdateName String
     | UpdateTime Time.DateTime
-    | UpdateRating Int
+    | UpdateRating Rating
     | UpdateText String

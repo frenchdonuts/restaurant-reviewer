@@ -1,5 +1,6 @@
 module Types exposing (..)
 
+import Zipper1D as Zipper
 import Time.DateTime as Time
 
 
@@ -12,7 +13,6 @@ type alias RestaurantPreview =
     { id : String
     , name : String
     , types : List String
-    , photos : List String
     , address : String
     }
 
@@ -20,11 +20,17 @@ type alias RestaurantPreview =
 type alias Restaurant =
     { id : String
     , name : String
-    , photos : List String
+    , photos : Zipper.Zipper Img
     , address : String
     , reviews : List Review
     , avgRating : Float
     , openingHours : Maybe (List Period)
+    }
+
+
+type alias Img =
+    { src : String
+    , alt : String
     }
 
 
@@ -77,7 +83,7 @@ type alias Review =
 type alias NewReview =
     { authorName : String
     , time : Maybe Time.DateTime
-    , rating : Maybe Rating
+    , rating : Rating
     , text : String
     }
 
@@ -86,7 +92,7 @@ initNewReview : NewReview
 initNewReview =
     { authorName = ""
     , time = Nothing
-    , rating = Nothing
+    , rating = One
     , text = ""
     }
 

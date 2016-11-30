@@ -141,11 +141,8 @@ view model =
 restaurantCard : Model -> Int -> RestaurantPreview -> Html Msg
 restaurantCard { indexOfElevatedCard } i r =
     let
-        { name, types, photos, address } =
+        { name, types, address } =
             r
-
-        photoUrl =
-            List.head photos |> Maybe.withDefault ""
 
         elevation =
             case indexOfElevatedCard of
@@ -188,50 +185,4 @@ restaurantCard { indexOfElevatedCard } i r =
                 [ Card.head [ Color.text Color.white ] [ text name ]
                 , Card.subhead [ Color.text Color.white ] [ text address ]
                 ]
-            ]
-
-
-restaurantCard2 : Model -> Int -> RestaurantPreview -> Html Msg
-restaurantCard2 { indexOfElevatedCard } i r =
-    let
-        { name, types, photos, address } =
-            r
-
-        photoUrl =
-            List.head photos |> Maybe.withDefault ""
-
-        elevation =
-            case indexOfElevatedCard of
-                Nothing ->
-                    Elevation.e0
-
-                Just k ->
-                    if i == k then
-                        Elevation.e6
-                    else
-                        Elevation.e0
-
-        zIndex =
-            case indexOfElevatedCard of
-                Nothing ->
-                    "0"
-
-                Just k ->
-                    if i == k then
-                        "3"
-                    else
-                        "0"
-    in
-        Options.div
-            [ css "height" "138px"
-            , css "width" "50%"
-            , css "z-index" zIndex
-            , Color.background Color.primary
-            , Elevation.transition 250
-            , elevation
-            , Options.attribute <| Events.onMouseEnter <| MouseEnterRestaurantCard (Just i)
-            , Options.attribute <| Events.onMouseLeave <| MouseEnterRestaurantCard Nothing
-            ]
-            [ Options.styled Html.h5 [ Color.text Color.white ] [ text name ]
-            , Options.styled Html.h6 [ Color.text Color.white ] [ text address ]
             ]
