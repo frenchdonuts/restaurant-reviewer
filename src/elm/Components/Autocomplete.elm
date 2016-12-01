@@ -83,8 +83,14 @@ update config msg state data =
 
         SetAutoState autoMsg ->
             let
+                filteredData =
+                    acceptableData state.query config.toId data
+
+                howManyToShow =
+                    List.length filteredData
+
                 ( newState, maybeMsg ) =
-                    Menu.update (updateConfig config) autoMsg state.howManyToShow state.autoState (acceptableData state.query config.toId data)
+                    Menu.update (updateConfig config) autoMsg howManyToShow state.autoState filteredData
 
                 newModel =
                     { state | autoState = newState }
@@ -131,18 +137,25 @@ update config msg state data =
                     update config Reset state data
 
                 Nothing ->
-                    if toTop then
-                        { state
-                            | autoState = Menu.resetToLastItem (updateConfig config) (acceptableData state.query config.toId data) state.howManyToShow state.autoState
-                            , selectedDatum = List.head <| List.reverse <| List.take state.howManyToShow <| (acceptableData state.query config.toId data)
-                        }
-                            ! []
-                    else
-                        { state
-                            | autoState = Menu.resetToFirstItem (updateConfig config) (acceptableData state.query config.toId data) state.howManyToShow state.autoState
-                            , selectedDatum = List.head <| List.take state.howManyToShow <| (acceptableData state.query config.toId data)
-                        }
-                            ! []
+                    let
+                        filteredData =
+                            acceptableData state.query config.toId data
+
+                        howManyToShow =
+                            List.length filteredData
+                    in
+                        if toTop then
+                            { state
+                                | autoState = Menu.resetToLastItem (updateConfig config) filteredData howManyToShow state.autoState
+                                , selectedDatum = List.head <| List.reverse <| filteredData
+                            }
+                                ! []
+                        else
+                            { state
+                                | autoState = Menu.resetToFirstItem (updateConfig config) filteredData howManyToShow state.autoState
+                                , selectedDatum = List.head <| filteredData
+                            }
+                                ! []
 
         Reset ->
             { state | autoState = Menu.reset (updateConfig config) state.autoState, selectedDatum = Nothing } ! []
@@ -224,6 +237,9 @@ type alias ViewConfig data =
 view : ViewConfig a -> State a -> List a -> Html Msg
 view config state data =
     let
+        howManyToShow =
+            List.length <| acceptableData state.query config.toId data
+
         options =
             { preventDefault = True, stopPropagation = False }
 
@@ -241,7 +257,7 @@ view config state data =
 
         menu =
             if state.showMenu then
-                [ viewMenu config state data ]
+                [ viewMenu config howManyToShow state data ]
             else
                 []
 
@@ -272,7 +288,6 @@ view config state data =
                 , attribute "role" "combobox"
                 , attribute "aria-autocomplete" "list"
                 , attribute "aria-label" config.inputLabel
-                  --onWithOptions "keydown" options dec
                 ]
     in
         div []
@@ -288,6 +303,7 @@ view config state data =
                     , Textfield.label config.inputLabel
                     , Textfield.floatingLabel
                     , Textfield.text'
+                    , Options.css "width" "100%"
                     , Options.id <| state.autocompleteId ++ "-input"
                     ]
                 ]
@@ -304,10 +320,10 @@ acceptableData query toId data =
         List.filter (String.contains lowerQuery << String.toLower << toId) data
 
 
-viewMenu : ViewConfig a -> State a -> List a -> Html Msg
-viewMenu config state data =
+viewMenu : ViewConfig a -> Int -> State a -> List a -> Html Msg
+viewMenu config howManyToShow state data =
     div [ style [ ( "position", "relative" ) ] ]
-        [ Html.map SetAutoState (Menu.view (viewConfig config state.autocompleteId) state.howManyToShow state.autoState (acceptableData state.query config.toId data)) ]
+        [ Html.map SetAutoState (Menu.view (viewConfig config state.autocompleteId) howManyToShow state.autoState (acceptableData state.query config.toId data)) ]
 
 
 updateConfig : UpdateConfig a -> Menu.UpdateConfig Msg a

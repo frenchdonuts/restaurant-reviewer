@@ -28,7 +28,7 @@ init : Result String Page -> ( Model, Cmd Msg )
 init parseResult =
     let
         ( initModel, initCmd ) =
-            Update.mockRestaurantDetailInit
+            Update.init
 
         ( updateModel, updateCmd ) =
             urlUpdate parseResult initModel
@@ -40,7 +40,7 @@ urlUpdate : Result String Page -> Model -> ( Model, Cmd Msg )
 urlUpdate parseResult model =
     case parseResult of
         Ok page ->
-            ( { model | currentPage = RestaurantDetail "" }, Cmd.none )
+            ( { model | currentPage = page }, Cmd.none )
 
         Err errMsg ->
             ( { model | currentPage = Home }, Cmd.none )

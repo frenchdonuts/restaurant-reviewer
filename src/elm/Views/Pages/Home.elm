@@ -74,7 +74,6 @@ view model =
                         , Toggles.onClick ToggleCasual
                         , Options.inner
                             [ Options.attribute <| Attr.attribute "aria-label" "Include casual restaurants"
-                            , Options.attribute <| Attr.attribute "aria-checked" (toString ToggleCasual)
                             ]
                         ]
                         [ text "Casual" ]
@@ -86,33 +85,30 @@ view model =
                         , Toggles.onClick ToggleFancy
                         , Options.inner
                             [ Options.attribute <| Attr.attribute "aria-label" "Include fancy restaurants"
-                            , Options.attribute <| Attr.attribute "aria-checked" (toString ToggleFancy)
                             ]
                         ]
                         [ text "Fancy" ]
-                    ]
-                , cell
-                    [ size Desktop 2, size Tablet 2, size Phone 2, offset Tablet 2 ]
-                    [ switch Mdl
+                    , Toggles.checkbox Mdl
                         [ 2 ]
                         mdl
                         [ Toggles.onClick ToggleOpenNow
                         , value openNow
                         , Options.inner
-                            [ Options.attribute <| Attr.attribute "aria-label" "Open now"
-                            , Options.attribute <| Attr.attribute "aria-checked" (toString ToggleOpenNow)
-                            ]
+                            [ Options.attribute <| Attr.attribute "aria-label" "Include only open restaurants." ]
                         ]
                         [ text "Open now" ]
-                    , div
-                        [ Attr.attribute "role" "button"
-                        , Attr.style [ ( "float", "right" ), ( "padding-right", "16px" ) ]
-                        ]
+                    ]
+                , cell
+                    [ size Desktop 2, size Tablet 2, size Phone 2 ]
+                    [ div
+                        []
                         [ Button.render Mdl
                             [ 1 ]
                             mdl
-                            [ Button.primary
-                            , Button.onClick FetchRestaurants
+                            [ Button.onClick FetchRestaurants
+                            , Button.raised
+                            , Button.colored
+                            , css "width" "100%"
                             ]
                             [ text "Search" ]
                         ]
@@ -169,7 +165,6 @@ restaurantCard { indexOfElevatedCard } i r =
         Card.view
             [ css "height" "138px"
             , css "width" "50%"
-              --, css "border" "1px solid white"
             , css "z-index" zIndex
             , Color.background Color.primary
             , Elevation.transition 250
@@ -179,8 +174,7 @@ restaurantCard { indexOfElevatedCard } i r =
             , Options.attribute <| Events.onClick <| OnRestaurantClick r
             ]
             [ Card.title
-                [ Options.attribute <| Attr.tabindex 0
-                , Options.attribute <| Attr.attribute "role" "listitem"
+                [ Options.attribute <| Attr.attribute "role" "listitem"
                 ]
                 [ Card.head [ Color.text Color.white ] [ text name ]
                 , Card.subhead [ Color.text Color.white ] [ text address ]
