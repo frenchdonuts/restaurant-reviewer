@@ -5,10 +5,9 @@ import Model exposing (..)
 import Msg exposing (..)
 import Components.Autocomplete as Autocomplete
 import Helper exposing (prices, priceString, cuisines, cuisineString)
-import Html exposing (Html, div, text, img, h4, select, option)
+import Html exposing (Html, map, div, text, img, h4, select, option)
 import Html.Attributes as Attr
 import Html.Events as Events
-import Html.App exposing (map)
 import Material.Grid exposing (grid, cell, size, Device(..), noSpacing, Cell, offset)
 import Material.List exposing (ul, li)
 import Material.Card as Card
@@ -22,14 +21,18 @@ import Material.Color as Color
 cuisineAutocompleteViewConfig : Autocomplete.ViewConfig Cuisine
 cuisineAutocompleteViewConfig =
     let
-        customLi keySelected mouseSelected cuisine =
+        customLi keySelected mouseSelected i cuisine =
             { attributes =
-                [ Attr.classList
+                [ Attr.id (cuisineString cuisine)
+                , Attr.classList
                     [ ( "mdl-list__item", True )
                     , ( "active", keySelected )
                     , ( "active", mouseSelected )
                     ]
                 , Attr.style [ ( "background-color", "white" ) ]
+                , Attr.attribute "role" "option"
+                , Attr.attribute "aria-posinset" (toString i)
+                , Attr.attribute "aria-setsize" "5"
                 ]
             , children = [ Html.text (cuisineString cuisine) ]
             }
@@ -43,6 +46,7 @@ cuisineAutocompleteViewConfig =
                 , ( "z-index", "2" )
                 , ( "margin-top", "-19px" )
                 ]
+            , Attr.attribute "role" "presentation"
             ]
         , li = customLi
         , inputLabel = "Cuisine"
@@ -55,14 +59,14 @@ view model =
         { restaurants, loaderDisplayed, errMsg, mdl, cuisineAutocomplete, includeCasualInSearch, includeFancyInSearch, openNow } =
             model
     in
-        (Options.styled' div)
+        (Options.styled_ div)
             []
             [ Attr.style [ ( "min-height", "500px" ), ( "padding-top", "2%" ) ] ]
             [ grid
                 []
                 [ cell
                     [ size Desktop 4, size Tablet 4, size Phone 4, offset Desktop 4, offset Tablet 2 ]
-                    [ Autocomplete.view cuisineAutocompleteViewConfig cuisineAutocomplete cuisines |> map CuisineAutocomplete
+                    [ map CuisineAutocomplete (Autocomplete.view cuisineAutocompleteViewConfig cuisineAutocomplete cuisines)
                     ]
                 , cell
                     [ size Desktop 2, size Tablet 2, size Phone 2, offset Desktop 4, offset Tablet 2 ]

@@ -9,7 +9,6 @@ import Autocomplete as Menu
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Html.App as Html
 import Material.Textfield as Textfield
 import Material.Options as Options
 import String
@@ -174,7 +173,11 @@ update config msg state data =
                     setQuery state config.toId id data
                         |> resetMenu
             in
-                ( newModel, Task.perform (\err -> NoOp) (\_ -> NoOp) (Dom.focus <| state.autocompleteId ++ "-input") )
+                newModel
+                    ! [ Task.perform
+                            (\_ -> NoOp)
+                            (Dom.focus (state.autocompleteId ++ "-input") |> Task.onError (\err -> Task.succeed ()))
+                      ]
 
         PreviewDatum id ->
             { state | selectedDatum = getDatumAtId data config.toId id } ! []
@@ -229,7 +232,7 @@ resetMenu state =
 type alias ViewConfig data =
     { toId : data -> String
     , ul : List (Attribute Never)
-    , li : Menu.KeySelected -> Menu.MouseSelected -> data -> Menu.HtmlDetails Never
+    , li : Menu.KeySelected -> Menu.MouseSelected -> Int -> data -> Menu.HtmlDetails Never
     , inputLabel : String
     }
 
@@ -243,17 +246,11 @@ view config state data =
         options =
             { preventDefault = True, stopPropagation = False }
 
-        dec =
-            (Json.customDecoder keyCode
-                (\code ->
-                    if code == 38 || code == 40 then
-                        Ok NoOp
-                    else if code == 27 then
-                        Ok HandleEscape
-                    else
-                        Err "not handling that key"
-                )
-            )
+        tagger keycode =
+            if keycode == 27 then
+                HandleEscape
+            else
+                NoOp
 
         menu =
             if state.showMenu then
@@ -299,10 +296,10 @@ view config state data =
                     , Textfield.onInput SetQuery
                     , Textfield.onFocus OnFocus
                     , Textfield.onBlur OnBlur
-                    , Textfield.on "keydown" dec
+                    , Textfield.on "keydown" (Json.map tagger keyCode)
                     , Textfield.label config.inputLabel
                     , Textfield.floatingLabel
-                    , Textfield.text'
+                    , Textfield.text_
                     , Options.css "width" "100%"
                     , Options.id <| state.autocompleteId ++ "-input"
                     ]

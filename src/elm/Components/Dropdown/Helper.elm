@@ -57,13 +57,13 @@ next (Iterator iterator) =
         { min_, max_, currentIndex } =
             iterator
 
-        currentIndex' =
+        currentIndex_ =
             if (currentIndex >= max_) then
                 min_
             else
                 currentIndex + 1
     in
-        Iterator { iterator | currentIndex = currentIndex' }
+        Iterator { iterator | currentIndex = currentIndex_ }
 
 
 prev : CyclicIterator -> CyclicIterator
@@ -72,10 +72,10 @@ prev (Iterator iterator) =
         { min_, max_, currentIndex } =
             iterator
 
-        currentIndex' =
+        currentIndex_ =
             if (currentIndex <= min_) then
                 max_
             else
                 currentIndex - 1
     in
-        Iterator { iterator | currentIndex = currentIndex' }
+        Iterator { iterator | currentIndex = currentIndex_ }

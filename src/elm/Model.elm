@@ -21,6 +21,7 @@ type alias Model =
     , selectedRestaurant : Maybe Restaurant
     , newReviews : Dict.Dict String (List NewReview)
     , newReview : NewReview
+    , history : List (Maybe Page)
     , mdl : Material.Model
     , timezoneOffset : Int
     }

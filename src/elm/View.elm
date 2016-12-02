@@ -6,11 +6,8 @@ import Types exposing (..)
 import Views.Pages.Home as Home
 import Views.Pages.RestaurantDetail as RestaurantDetail
 import Html exposing (Html, div, ul, text, img, span)
-import Html.Attributes as Attr
 import Material.Layout as Layout
-import Material.Elevation as Elevation
 import Material.Options as Options exposing (css)
-import Debug
 
 
 root : Model -> Html Msg

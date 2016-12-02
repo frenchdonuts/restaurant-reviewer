@@ -93,8 +93,8 @@ update msg state =
                     , Cmd.none
                     )
 
-                Mdl message' ->
-                    Material.update message' s
+                Mdl message_ ->
+                    Material.update message_ s
 
                 DomEffectErr err ->
                     let
@@ -115,17 +115,17 @@ onVerticalArrows cycleFn (State s) =
         { iterator, highlightedItemIndex } =
             s
 
-        iterator' =
+        iterator_ =
             cycleFn iterator
 
-        highlightedItemIndex' =
-            currentIndex iterator'
+        highlightedItemIndex_ =
+            currentIndex iterator_
     in
         ( State
             { s
                 | dropdownExpanded = True
-                , highlightedItemIndex = Debug.log "highlightedItemIndex'" highlightedItemIndex'
-                , iterator = iterator'
+                , highlightedItemIndex = Debug.log "highlightedItemIndex'" highlightedItemIndex_
+                , iterator = iterator_
             }
         , Task.perform DomEffectErr DomEffectSuc (Dom.focus <| "option" ++ (highlightedItemIndex |> toString))
         )

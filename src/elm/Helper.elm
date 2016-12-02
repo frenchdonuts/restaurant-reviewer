@@ -1,5 +1,8 @@
 module Helper exposing (..)
 
+{-| This module mainly defines functions on our Types defined in the Types module
+-}
+
 import Types exposing (..)
 
 
@@ -250,18 +253,3 @@ ratingToInt rating =
 
         Five ->
             5
-
-
-isJust : Maybe a -> Bool
-isJust m =
-    case m of
-        Just _ ->
-            True
-
-        _ ->
-            False
-
-
-isNothing : Maybe a -> Bool
-isNothing =
-    not << isJust

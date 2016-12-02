@@ -1,5 +1,6 @@
 module Zipper1D exposing (..)
 
+import Utils
 import List exposing (..)
 
 
@@ -40,8 +41,6 @@ backward (Zipper z) =
         case z.before |> reverse >> head of
             Just x ->
                 Zipper
-                    -- before [1,2,3], cur 4, after [5,6]
-                    -- before [1,2], cur 3, after [4,5,6]
                     { before = z.before |> reverse >> myTail >> reverse
                     , cur = x
                     , after = z.cur :: z.after
@@ -54,7 +53,7 @@ backward (Zipper z) =
 
 goto : a -> Zipper a -> Maybe (Zipper a)
 goto a z =
-    Maybe.oneOf [ lookForward a z, lookBackward a z ]
+    Utils.oneOf [ lookForward a z, lookBackward a z ]
 
 
 lookForward : a -> Zipper a -> Maybe (Zipper a)

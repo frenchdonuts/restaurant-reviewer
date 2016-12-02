@@ -3,11 +3,12 @@ module Api exposing (getRestaurants, getRestaurant, mockGetRestaurant)
 import Model exposing (..)
 import Types exposing (..)
 import Helper
+import Utils
 import Zipper1D as Zipper
 import Components.Autocomplete exposing (getSelectedDatum)
 import Task
 import Http
-import Json.Decode as Json exposing ((:=))
+import Json.Decode as Json exposing (field)
 import String
 import ParseInt
 import Time.DateTime as Time
@@ -18,7 +19,7 @@ api_key =
     "AIzaSyBFF9RccdIGE7dOBQdiq8m0EPGNJH51pmg"
 
 
-getRestaurants : Float -> Float -> Model -> Task.Task Http.Error (List RestaurantPreview)
+getRestaurants : Float -> Float -> Model -> Http.Request (List RestaurantPreview)
 getRestaurants lat long model =
     let
         latlong =
@@ -32,27 +33,27 @@ getRestaurants lat long model =
                    ]
 
         url =
-            Http.url
+            Utils.url
                 "https://maps.googleapis.com/maps/api/place/textsearch/json"
                 parameters
+                |> Debug.log "url for restaurants fetch"
 
         mockUrl =
             "http://localhost:8080/static/restaurants_response.json"
     in
-        Http.get ("results" := Json.list decodeRestaurantPreview) url
-            |> Debug.log "hit1111111111111"
+        Http.get url (field "results" (Json.list decodeRestaurantPreview))
 
 
-mockGetRestaurant : String -> Task.Task Http.Error Restaurant
+mockGetRestaurant : String -> Http.Request Restaurant
 mockGetRestaurant id =
     let
         mockUrl =
             "http://localhost:8080/static/restaurantDetail_response.json"
     in
-        Http.get ("result" := decodeRestaurant) mockUrl
+        Http.get mockUrl (field "result" decodeRestaurant)
 
 
-getRestaurant : String -> Task.Task Http.Error Restaurant
+getRestaurant : String -> Http.Request Restaurant
 getRestaurant id =
     let
         parameters =
@@ -61,11 +62,11 @@ getRestaurant id =
             ]
 
         url =
-            Http.url
+            Utils.url
                 "https://maps.googleapis.com/maps/api/place/details/json"
                 parameters
     in
-        Http.get ("result" := decodeRestaurant) url
+        Http.get url (field "result" decodeRestaurant)
 
 
 decodeRestaurant : Json.Decoder Restaurant
@@ -87,30 +88,30 @@ decodeRestaurant =
                         Zipper.zipper [] x xs
 
         decodeListOfPhotosAsZipper =
-            Json.map createZipperOfPhotos ("photos" := (Json.list <| Json.map toPhotoUrl ("photo_reference" := Json.string)))
+            Json.map createZipperOfPhotos (field "photos" (Json.list <| Json.map toPhotoUrl (field "photo_reference" Json.string)))
     in
-        Json.object7 Restaurant
-            ("id" := Json.string)
-            ("name" := Json.string)
+        Json.map7 Restaurant
+            (field "id" Json.string)
+            (field "name" Json.string)
             decodeListOfPhotosAsZipper
-            ("formatted_address" := Json.string)
-            ("reviews" := Json.list decodeReview)
-            ("rating" := Json.float)
-            (Json.maybe ("opening_hours" := ("periods" := Json.list decodePeriod)))
+            (field "formatted_address" Json.string)
+            (field "reviews" <| Json.list decodeReview)
+            (field "rating" Json.float)
+            (Json.maybe << field "opening_hours" << field "periods" <| Json.list decodePeriod)
 
 
 decodePeriod : Json.Decoder Period
 decodePeriod =
-    Json.object2 Period
-        ("open" := decodeDayTime)
-        ("close" := Json.maybe decodeDayTime)
+    Json.map2 Period
+        (field "open" decodeDayTime)
+        (field "close" <| Json.maybe decodeDayTime)
 
 
 decodeDayTime : Json.Decoder DayTime
 decodeDayTime =
-    Json.object2 DayTime
-        ("day" := Json.map toDay Json.int)
-        ("time" := decodeTime)
+    Json.map2 DayTime
+        (field "day" <| Json.map toDay Json.int)
+        (field "time" decodeTime)
 
 
 decodeTime : Json.Decoder IntraDayTime
@@ -149,11 +150,11 @@ decodeTime =
 
 decodeReview : Json.Decoder Review
 decodeReview =
-    Json.object4 Review
-        ("author_name" := Json.string)
-        ("time" := Json.map (Time.fromTimestamp << ((*) 1000)) Json.float)
-        ("rating" := Json.map toRating Json.int)
-        ("text" := Json.string)
+    Json.map4 Review
+        (field "author_name" Json.string)
+        (field "time" <| Json.map (Time.fromTimestamp << ((*) 1000)) Json.float)
+        (field "rating" <| Json.map toRating Json.int)
+        (field "text" Json.string)
 
 
 toDay : Int -> Day
@@ -224,11 +225,11 @@ toPhotoUrl reference =
 
 decodeRestaurantPreview : Json.Decoder RestaurantPreview
 decodeRestaurantPreview =
-    Json.object4 RestaurantPreview
-        ("place_id" := Json.string)
-        ("name" := Json.string)
-        ("types" := Json.list Json.string)
-        ("formatted_address" := Json.string)
+    Json.map4 RestaurantPreview
+        (field "place_id" Json.string)
+        (field "name" Json.string)
+        (field "types" <| Json.list Json.string)
+        (field "formatted_address" Json.string)
 
 
 queryParameters : Model -> List ( String, String )

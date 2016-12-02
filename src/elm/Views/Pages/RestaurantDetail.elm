@@ -54,7 +54,7 @@ restaurantView r m =
     in
         grid []
             [ cell [ size Desktop 8, offset Desktop 2, size Tablet 8, size Phone 4 ]
-                [ (Options.styled' div)
+                [ (Options.styled_ div)
                     [ css "position" "relative"
                     , css "min-height" "800px"
                     , Elevation.e2
@@ -273,7 +273,7 @@ newReview r m =
                     [ 1 ]
                     m.mdl
                     [ Textfield.label "Name "
-                    , Textfield.text'
+                    , Textfield.text_
                     , Textfield.value newReview.authorName
                     , Textfield.onInput <| OnUpdateNewReview << UpdateName
                     , css "width" "100%"
@@ -334,7 +334,7 @@ stars sizepx r m =
                 []
 
         color i =
-            if i `Helper.lte` r then
+            if Helper.lte i r then
                 Color.primary
             else
                 Color.color Color.Grey Color.S400
@@ -353,7 +353,7 @@ stars sizepx r m =
                     ]
                 ]
                 [ Html.input
-                    ([ Attrs.type' "radio"
+                    ([ Attrs.type_ "radio"
                      , Attrs.name "rating"
                      , Attrs.value <| ratingToString i
                      , Attrs.title (ratingToString i ++ (starOrstars i))

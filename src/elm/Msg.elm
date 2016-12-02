@@ -1,41 +1,46 @@
 module Msg exposing (..)
 
 import Types exposing (..)
+import Components.Autocomplete as Autocomplete
+import Http
 import Geolocation
 import Material
-import Components.Autocomplete as Autocomplete
 import Time.DateTime as Time
 import Time as CoreTime
+import Navigation
 
 
 type Msg
     = NoOp
       -- Initialization
-    | OnInitErr String
-    | OnInitSuc Geolocation.Location
+    | Initialized (Result String Geolocation.Location)
       -- Restaurants API Request
     | FetchRestaurants
-    | OnFetchRestaurantsErr String
-    | OnFetchRestaurantsSuc (List RestaurantPreview)
+    | FetchedRestaurants (Result Http.Error (List RestaurantPreview))
       -- Restaurant API Response
-    | OnFetchRestaurantErr String
-    | OnFetchRestaurantSuc Restaurant
+    | FetchedRestaurant (Result Http.Error Restaurant)
+      {--Home page --}
       -- Cuisine Selector (Autocomplete, Home page)
     | CuisineAutocomplete Autocomplete.Msg
-      -- Price Selector (Home page)
+      -- Price Selector
     | ToggleCasual
     | ToggleFancy
-      -- Open now toggle (Home page)
+      -- Open now toggle
     | ToggleOpenNow
-      -- Restaurant List (Home page)
+      -- Restaurant List
     | OnRestaurantClick RestaurantPreview
     | MouseEnterRestaurantCard (Maybe Int)
-      -- Restaurant Detail page
+      {--Restaurant Detail page --}
+      -- Image Carousel
     | PrevPhoto
     | NextPhoto
+      -- New Review form
     | OnUpdateNewReview NewReviewMsg
     | OnNewReviewSubmitBtnPressed
     | ValidNewReviewSubmitted NewReview CoreTime.Time
+      {--Routing --}
+    | UrlChange Navigation.Location
+      {--Misc --}
     | OnTimezoneOffsetFetched Int
     | Mdl (Material.Msg Msg)
 
