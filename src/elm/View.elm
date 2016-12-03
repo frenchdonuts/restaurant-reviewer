@@ -13,8 +13,16 @@ import Material.Options as Options exposing (css)
 root : Model -> Html Msg
 root model =
     let
+        currentPage =
+            case model.history of
+                maybePage :: mps ->
+                    Maybe.withDefault Home maybePage
+
+                [] ->
+                    Home
+
         currentView =
-            case model.currentPage of
+            case currentPage of
                 Home ->
                     Home.view model
 

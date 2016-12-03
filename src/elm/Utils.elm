@@ -10,6 +10,9 @@ url base parameters =
     let
         encodeParameters parameters =
             case parameters of
+                ( k, v ) :: [] ->
+                    Http.encodeUri k ++ "=" ++ (Http.encodeUri v)
+
                 ( k, v ) :: kvs ->
                     Http.encodeUri k ++ "=" ++ (Http.encodeUri v) ++ "&" ++ (encodeParameters kvs)
 
@@ -17,6 +20,16 @@ url base parameters =
                     ""
     in
         base ++ "?" ++ (encodeParameters parameters)
+
+
+maybeToBool : Maybe Bool -> Bool
+maybeToBool mb =
+    case mb of
+        Just b ->
+            b
+
+        Nothing ->
+            False
 
 
 isJust : Maybe a -> Bool

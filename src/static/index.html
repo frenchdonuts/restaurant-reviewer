@@ -9,6 +9,25 @@
     <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500|Roboto+Mono|Roboto+Condensed:400,700&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
     <link rel='stylesheet' href='https://fonts.googleapis.com/icon?family=Material+Icons'>
     <link rel="stylesheet" href="https://code.getmdl.io/1.2.1/material.amber-indigo.min.css" />
+    <script>
+        function openElmDebug() {
+            triggerEventOnPage(".elm-mini-controls-button", "click")
+        }
+
+        function triggerEventOnPage(selector, eventName, memo) {
+            //casper.evaluate(function(selector, eventName, memo){
+                var event;
+                var element = document.querySelector(selector);
+
+                event = document.createEvent("Event");
+                event.initEvent(eventName, true, true);
+                event.memo = memo || { };
+
+                element.dispatchEvent(event);
+            //}, selector, eventName, memo);
+            //wait();
+        }
+    </script>
   </head>
   <body>
   </body>

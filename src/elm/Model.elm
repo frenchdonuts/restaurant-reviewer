@@ -8,12 +8,12 @@ import Dict
 
 
 type alias Model =
-    { currentPage : Page
-    , restaurants : List RestaurantPreview
+    { restaurants : List RestaurantPreview
     , location : Maybe Geolocation.Location
     , loaderDisplayed : Bool
     , errMsg : String
     , cuisineAutocomplete : Autocomplete.State Cuisine
+    , selectedCuisine : Cuisine
     , includeCasualInSearch : Bool
     , includeFancyInSearch : Bool
     , openNow : Bool

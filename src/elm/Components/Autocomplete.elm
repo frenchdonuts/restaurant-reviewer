@@ -45,9 +45,9 @@ init autocompleteId =
     }
 
 
-getSelectedDatum : State a -> Maybe a
-getSelectedDatum =
-    .selectedDatum
+getQuery : State a -> String
+getQuery =
+    .query
 
 
 type Msg
@@ -65,25 +65,35 @@ type Msg
     | NoOp
 
 
-type alias UpdateConfig data =
+type alias UpdateConfig msg data =
     { toId : data -> String
+    , onSelectChoice : Maybe data -> msg
     }
 
 
-update : UpdateConfig a -> Msg -> State a -> List a -> ( State a, Cmd Msg )
+update : UpdateConfig msg a -> Msg -> State a -> List a -> ( State a, Cmd Msg, Maybe msg )
 update config msg state data =
     case msg of
         SetQuery newQuery ->
             let
+                filteredData =
+                    acceptableData newQuery config.toId data
+
                 showMenu =
-                    not << List.isEmpty <| (acceptableData newQuery config.toId data)
+                    not << List.isEmpty <| filteredData
+
+                selectedDatum =
+                    if List.length filteredData == 1 then
+                        List.head filteredData
+                    else
+                        Nothing
             in
-                { state | query = newQuery, showMenu = showMenu, selectedDatum = Nothing } ! []
+                ( { state | query = newQuery, showMenu = showMenu, selectedDatum = selectedDatum }, Cmd.none, Nothing )
 
         SetAutoState autoMsg ->
             let
                 filteredData =
-                    acceptableData state.query config.toId data
+                    Debug.log "filteredData" <| acceptableData state.query config.toId data
 
                 howManyToShow =
                     List.length filteredData
@@ -96,10 +106,14 @@ update config msg state data =
             in
                 case maybeMsg of
                     Nothing ->
-                        newModel ! []
+                        ( newModel, Cmd.none, Nothing )
 
                     Just updateMsg ->
-                        update config updateMsg newModel data
+                        let
+                            log =
+                                Debug.log "updateMsg from Menu subcomponent" updateMsg
+                        in
+                            update config updateMsg newModel data
 
         HandleEscape ->
             let
@@ -128,7 +142,7 @@ update config msg state data =
                         Nothing ->
                             handleEscape
             in
-                escapedModel ! []
+                ( escapedModel, Cmd.none, Nothing )
 
         Wrap toTop ->
             case state.selectedDatum of
@@ -144,20 +158,27 @@ update config msg state data =
                             List.length filteredData
                     in
                         if toTop then
-                            { state
+                            ( { state
                                 | autoState = Menu.resetToLastItem (updateConfig config) filteredData howManyToShow state.autoState
                                 , selectedDatum = List.head <| List.reverse <| filteredData
-                            }
-                                ! []
+                              }
+                            , Cmd.none
+                            , Nothing
+                            )
                         else
-                            { state
+                            ( { state
                                 | autoState = Menu.resetToFirstItem (updateConfig config) filteredData howManyToShow state.autoState
                                 , selectedDatum = List.head <| filteredData
-                            }
-                                ! []
+                              }
+                            , Cmd.none
+                            , Nothing
+                            )
 
         Reset ->
-            { state | autoState = Menu.reset (updateConfig config) state.autoState, selectedDatum = Nothing } ! []
+            ( { state | autoState = Menu.reset (updateConfig config) state.autoState, selectedDatum = Nothing }
+            , Cmd.none
+            , Nothing
+            )
 
         SelectDatumKeyboard id ->
             let
@@ -165,7 +186,7 @@ update config msg state data =
                     setQuery state config.toId id data
                         |> resetMenu
             in
-                newModel ! []
+                ( newModel, Cmd.none, Just (config.onSelectChoice newModel.selectedDatum) )
 
         SelectDatumMouse id ->
             let
@@ -173,26 +194,27 @@ update config msg state data =
                     setQuery state config.toId id data
                         |> resetMenu
             in
-                newModel
-                    ! [ Task.perform
-                            (\_ -> NoOp)
-                            (Dom.focus (state.autocompleteId ++ "-input") |> Task.onError (\err -> Task.succeed ()))
-                      ]
+                ( newModel
+                , Task.perform
+                    (\_ -> NoOp)
+                    (Dom.focus (state.autocompleteId ++ "-input") |> Task.onError (\err -> Task.succeed ()))
+                , Nothing
+                )
 
         PreviewDatum id ->
-            { state | selectedDatum = getDatumAtId data config.toId id } ! []
+            ( { state | selectedDatum = getDatumAtId data config.toId id }, Cmd.none, Nothing )
 
         OnFocus ->
-            state ! []
+            ( state, Cmd.none, Nothing )
 
         OnBlur ->
-            resetMenu state ! []
+            ( resetMenu state, Cmd.none, Just (config.onSelectChoice state.selectedDatum) )
 
         Textfield msg ->
-            { state | textfield = Textfield.update msg state.textfield } ! []
+            ( { state | textfield = Textfield.update msg state.textfield }, Cmd.none, Nothing )
 
         NoOp ->
-            state ! []
+            ( state, Cmd.none, Nothing )
 
 
 resetInput : State a -> State a
@@ -246,11 +268,26 @@ view config state data =
         options =
             { preventDefault = True, stopPropagation = False }
 
-        tagger keycode =
-            if keycode == 27 then
-                HandleEscape
-            else
-                NoOp
+        dec =
+            let
+                tagger code =
+                    if code == 38 || code == 40 then
+                        Ok NoOp
+                    else if code == 27 then
+                        Ok HandleEscape
+                    else
+                        Err "not handling that key"
+            in
+                Json.map tagger keyCode
+                    |> Json.andThen fromResult
+
+        fromResult result =
+            case result of
+                Ok val ->
+                    Json.succeed val
+
+                Err reason ->
+                    Json.fail reason
 
         menu =
             if state.showMenu then
@@ -296,7 +333,7 @@ view config state data =
                     , Textfield.onInput SetQuery
                     , Textfield.onFocus OnFocus
                     , Textfield.onBlur OnBlur
-                    , Textfield.on "keydown" (Json.map tagger keyCode)
+                    , Textfield.on "keydown" dec
                     , Textfield.label config.inputLabel
                     , Textfield.floatingLabel
                     , Textfield.text_
@@ -323,7 +360,7 @@ viewMenu config howManyToShow state data =
         [ Html.map SetAutoState (Menu.view (viewConfig config state.autocompleteId) howManyToShow state.autoState (acceptableData state.query config.toId data)) ]
 
 
-updateConfig : UpdateConfig a -> Menu.UpdateConfig Msg a
+updateConfig : UpdateConfig msg a -> Menu.UpdateConfig Msg a
 updateConfig config =
     Menu.updateConfig
         { toId = config.toId
@@ -331,7 +368,7 @@ updateConfig config =
             \code maybeId ->
                 if code == 38 || code == 40 then
                     Maybe.map PreviewDatum maybeId
-                else if code == 13 then
+                else if code == 13 || code == 9 then
                     Maybe.map SelectDatumKeyboard maybeId
                 else
                     Just <| Reset

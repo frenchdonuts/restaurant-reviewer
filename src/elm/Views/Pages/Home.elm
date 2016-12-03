@@ -26,13 +26,10 @@ cuisineAutocompleteViewConfig =
                 [ Attr.id (cuisineString cuisine)
                 , Attr.classList
                     [ ( "mdl-list__item", True )
-                    , ( "active", keySelected )
-                    , ( "active", mouseSelected )
+                    , ( "active", keySelected || mouseSelected )
                     ]
                 , Attr.style [ ( "background-color", "white" ) ]
                 , Attr.attribute "role" "option"
-                , Attr.attribute "aria-posinset" (toString i)
-                , Attr.attribute "aria-setsize" "5"
                 ]
             , children = [ Html.text (cuisineString cuisine) ]
             }
@@ -46,10 +43,9 @@ cuisineAutocompleteViewConfig =
                 , ( "z-index", "2" )
                 , ( "margin-top", "-19px" )
                 ]
-            , Attr.attribute "role" "presentation"
             ]
         , li = customLi
-        , inputLabel = "Cuisine"
+        , inputLabel = "Select cuisine type"
         }
 
 
@@ -180,7 +176,11 @@ restaurantCard { indexOfElevatedCard } i r =
             [ Card.title
                 [ Options.attribute <| Attr.attribute "role" "listitem"
                 ]
-                [ Card.head [ Color.text Color.white ] [ text name ]
+                [ Card.head
+                    [ Color.text Color.white
+                    , Options.attribute <| Attr.attribute "role" "link"
+                    ]
+                    [ text name ]
                 , Card.subhead [ Color.text Color.white ] [ text address ]
                 ]
             ]

@@ -22,6 +22,7 @@ type Msg
       {--Home page --}
       -- Cuisine Selector (Autocomplete, Home page)
     | CuisineAutocomplete Autocomplete.Msg
+    | SelectedCuisine Cuisine
       -- Price Selector
     | ToggleCasual
     | ToggleFancy

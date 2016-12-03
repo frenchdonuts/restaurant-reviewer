@@ -5,7 +5,6 @@ import Types exposing (..)
 import Helper
 import Utils
 import Zipper1D as Zipper
-import Components.Autocomplete exposing (getSelectedDatum)
 import Task
 import Http
 import Json.Decode as Json exposing (field)
@@ -19,14 +18,14 @@ api_key =
     "AIzaSyBFF9RccdIGE7dOBQdiq8m0EPGNJH51pmg"
 
 
-getRestaurants : Float -> Float -> Model -> Http.Request (List RestaurantPreview)
-getRestaurants lat long model =
+getRestaurants : Float -> Float -> Cuisine -> Model -> Http.Request (List RestaurantPreview)
+getRestaurants lat long selectedCuisine model =
     let
         latlong =
             toString lat ++ "," ++ toString long
 
         parameters =
-            queryParameters model
+            queryParameters selectedCuisine model
                 ++ [ ( "key", api_key )
                    , ( "location", latlong )
                    , ( "radius", "500" )
@@ -225,24 +224,17 @@ toPhotoUrl reference =
 
 decodeRestaurantPreview : Json.Decoder RestaurantPreview
 decodeRestaurantPreview =
-    Json.map4 RestaurantPreview
+    Json.map5 RestaurantPreview
         (field "place_id" Json.string)
         (field "name" Json.string)
         (field "types" <| Json.list Json.string)
         (field "formatted_address" Json.string)
+        (Json.maybe << field "opening_hours" <| field "open_now" Json.bool)
 
 
-queryParameters : Model -> List ( String, String )
-queryParameters { includeCasualInSearch, includeFancyInSearch, openNow, cuisineAutocomplete } =
+queryParameters : Cuisine -> Model -> List ( String, String )
+queryParameters cuisine { includeCasualInSearch, includeFancyInSearch, openNow, cuisineAutocomplete } =
     let
-        selectedCuisine =
-            case getSelectedDatum cuisineAutocomplete of
-                Just cuisine ->
-                    cuisine
-
-                Nothing ->
-                    NoPreference
-
         minprice =
             case includeCasualInSearch of
                 True ->
@@ -260,7 +252,7 @@ queryParameters { includeCasualInSearch, includeFancyInSearch, openNow, cuisineA
                     "2"
 
         parameters =
-            [ ( "query", cuisineString selectedCuisine ++ " restaurant" )
+            [ ( "query", cuisineString cuisine ++ " restaurant" )
             , ( "minprice", minprice )
             , ( "maxprice", maxprice )
             ]

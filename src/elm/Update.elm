@@ -11,6 +11,7 @@ import Zipper1D as Zipper
 import Components.Autocomplete as Autocomplete
 import Http
 import Task exposing (..)
+import String
 import Maybe
 import Dict
 import Navigation
@@ -24,13 +25,13 @@ import UrlParser as Url
 
 init : Navigation.Location -> ( Model, Cmd Msg )
 init location =
-    { currentPage = Home
-    , restaurants = []
+    { restaurants = []
     , location = Nothing
     , loaderDisplayed = True
     , errMsg = ""
     , mdl = Material.model
     , cuisineAutocomplete = Autocomplete.init "cuisine"
+    , selectedCuisine = NoPreference
     , includeCasualInSearch = True
     , includeFancyInSearch = True
     , openNow = False
@@ -146,12 +147,25 @@ update msg model =
 
             FetchRestaurants ->
                 let
+                    autocompleteQuery =
+                        String.toLower <| Autocomplete.getQuery cuisineAutocomplete
+
+                    selectedCuisine =
+                        case List.head <| List.filter ((==) autocompleteQuery << String.toLower << cuisineString) cuisines of
+                            Just cuisine ->
+                                cuisine
+
+                            Nothing ->
+                                NoPreference
+
+                    log =
+                        Debug.log "selectedCuisine" model.selectedCuisine
+
                     cmd =
                         case model.location of
                             Just location ->
-                                Debug.log "Location had" <|
-                                    Http.send FetchedRestaurants <|
-                                        getRestaurants location.latitude location.longitude model
+                                Http.send FetchedRestaurants <|
+                                    getRestaurants location.latitude location.longitude selectedCuisine model
 
                             Nothing ->
                                 Debug.log "No location" Cmd.none
@@ -161,12 +175,19 @@ update msg model =
             FetchedRestaurants fetchRestaurantsResult ->
                 case fetchRestaurantsResult of
                     Ok restaurants ->
-                        ( { model
-                            | restaurants = restaurants
-                            , loaderDisplayed = False
-                          }
-                        , Cmd.none
-                        )
+                        let
+                            restaurants_ =
+                                if model.openNow then
+                                    List.filter ((==) True << Utils.maybeToBool << .openNow) restaurants
+                                else
+                                    restaurants
+                        in
+                            ( { model
+                                | restaurants = restaurants_
+                                , loaderDisplayed = False
+                              }
+                            , Cmd.none
+                            )
 
                     Err httpError ->
                         ( { model
@@ -200,7 +221,7 @@ update msg model =
                     newPage =
                         RestaurantDetail restaurantPreview.id
                 in
-                    { model | currentPage = newPage }
+                    model
                         ! [ Navigation.newUrl <| Nav.toPath newPage
                           , Http.send FetchedRestaurant (getRestaurant restaurantPreview.id)
                           ]
@@ -208,13 +229,24 @@ update msg model =
             -- Cuisine Selector (Autocomplete)
             CuisineAutocomplete msg ->
                 let
-                    ( newState, cmd ) =
+                    ( newState, cmd, maybeMsg ) =
                         Autocomplete.update cuisineAutocompleteUpdateConfig msg cuisineAutocomplete cuisines
 
                     newModel =
                         { model | cuisineAutocomplete = newState }
+
+                    ( newModel_, cmd_ ) =
+                        case maybeMsg of
+                            Just msg ->
+                                update msg newModel
+
+                            Nothing ->
+                                ( newModel, Cmd.none )
                 in
-                    newModel ! [ Cmd.map CuisineAutocomplete cmd ]
+                    newModel_ ! [ Cmd.map CuisineAutocomplete cmd, cmd_ ]
+
+            SelectedCuisine cuisine ->
+                { model | selectedCuisine = cuisine } ! []
 
             -- Price Selector - make sure at least one of them is always True
             ToggleCasual ->
@@ -339,8 +371,9 @@ update msg model =
                         ! []
 
             UrlChange navLocation ->
-                { model | history = Url.parsePath Nav.route navLocation :: model.history }
-                    ! []
+                Debug.log "Navigating..." <|
+                    { model | history = Url.parsePath Nav.route navLocation :: model.history }
+                        ! []
 
             OnTimezoneOffsetFetched offsetInMin ->
                 { model | timezoneOffset = Debug.log "offsetInMs" offsetInMin } ! []
@@ -349,6 +382,17 @@ update msg model =
                 Material.update msg model
 
 
-cuisineAutocompleteUpdateConfig : Autocomplete.UpdateConfig Cuisine
+cuisineAutocompleteUpdateConfig : Autocomplete.UpdateConfig Msg Cuisine
 cuisineAutocompleteUpdateConfig =
-    { toId = cuisineString }
+    { toId = cuisineString
+    , onSelectChoice =
+        SelectedCuisine
+            << (\maybeCuisine ->
+                    case maybeCuisine of
+                        Just cuisine ->
+                            cuisine
+
+                        Nothing ->
+                            NoPreference
+               )
+    }
