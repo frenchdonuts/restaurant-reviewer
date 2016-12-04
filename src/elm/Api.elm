@@ -212,14 +212,10 @@ toRating i =
 -}
 toPhotoUrl : String -> String
 toPhotoUrl reference =
-    let
-        api_key2 =
-            "AIzaSyAifY5S5j1r_UMB5Ze3zAFI9YQmKnaak_Q"
-    in
-        "https://maps.googleapis.com/maps/api/place/photo?maxwidth=533&photoreference="
-            ++ reference
-            ++ "&key="
-            ++ api_key
+    "https://maps.googleapis.com/maps/api/place/photo?maxwidth=533&photoreference="
+        ++ reference
+        ++ "&key="
+        ++ api_key
 
 
 decodeRestaurantPreview : Json.Decoder RestaurantPreview

@@ -50,7 +50,16 @@ restaurantView : Restaurant -> Model -> Html Msg
 restaurantView r m =
     let
         view =
-            grid [] << List.map (\section -> cell [ size All 12, css "min-height" "33%", css "border" (Color.hueName Color.Grey) ] [ section ])
+            grid []
+                << List.map
+                    (\section ->
+                        cell
+                            [ size All 12
+                            , css "min-height" "33%"
+                            , css "border" (Color.hueName Color.Grey)
+                            ]
+                            [ section ]
+                    )
     in
         grid []
             [ cell [ size Desktop 8, offset Desktop 2, size Tablet 8, size Phone 4 ]
@@ -175,7 +184,7 @@ header r m =
                 , Attrs.attribute "aria-atomic" "true"
                 , Attrs.attribute "aria-relevant" "text"
                 , Attrs.src src
-                , Attrs.alt <| "Image " ++ toString (Zipper.index photos) ++ ": " ++ alt
+                , Attrs.alt <| "Image " ++ toString (Zipper.index photos) ++ ": " ++ name
                 , Attrs.style
                     [ ( "position", "absolute" )
                     , ( "top", "0" )

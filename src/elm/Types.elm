@@ -48,10 +48,7 @@ type alias DayTime =
 
 
 type alias IntraDayTime =
-    -- 0-23
-    { hr :
-        Int
-        -- 0-59
+    { hr : Int
     , min : Int
     }
 
