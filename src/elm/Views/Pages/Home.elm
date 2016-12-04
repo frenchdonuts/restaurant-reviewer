@@ -23,7 +23,7 @@ cuisineAutocompleteViewConfig =
     let
         customLi keySelected mouseSelected i cuisine =
             { attributes =
-                [ Attr.id (cuisineString cuisine)
+                [ Attr.id << String.join "" << String.split " " <| (cuisineString cuisine)
                 , Attr.classList
                     [ ( "mdl-list__item", True )
                     , ( "active", keySelected || mouseSelected )
@@ -62,57 +62,18 @@ view model =
                 []
                 [ cell
                     [ size Desktop 4, size Tablet 4, size Phone 4, offset Desktop 4, offset Tablet 2 ]
-                    [ map CuisineAutocomplete (Autocomplete.view cuisineAutocompleteViewConfig cuisineAutocomplete cuisines)
+                    [ map CuisineAutocomplete
+                        (Autocomplete.view cuisineAutocompleteViewConfig cuisineAutocomplete cuisines)
                     ]
                 , cell
                     [ size Desktop 2, size Tablet 2, size Phone 2, offset Desktop 4, offset Tablet 2 ]
-                    [ Toggles.checkbox Mdl
-                        [ 0 ]
-                        model.mdl
-                        [ Toggles.value includeCasualInSearch
-                        , Toggles.ripple
-                        , Toggles.onClick ToggleCasual
-                        , Options.inner
-                            [ Options.attribute <| Attr.attribute "aria-label" "Include casual restaurants"
-                            ]
-                        ]
-                        [ text "Casual" ]
-                    , Toggles.checkbox Mdl
-                        [ 1 ]
-                        model.mdl
-                        [ Toggles.value includeFancyInSearch
-                        , Toggles.ripple
-                        , Toggles.onClick ToggleFancy
-                        , Options.inner
-                            [ Options.attribute <| Attr.attribute "aria-label" "Include fancy restaurants"
-                            ]
-                        ]
-                        [ text "Fancy" ]
-                    , Toggles.checkbox Mdl
-                        [ 2 ]
-                        mdl
-                        [ Toggles.onClick ToggleOpenNow
-                        , value openNow
-                        , Options.inner
-                            [ Options.attribute <| Attr.attribute "aria-label" "Include only open restaurants." ]
-                        ]
-                        [ text "Open now" ]
+                    [ includeCasualRestaurantsToggle model 0
+                    , includeFancyRestaurantsToggle model 1
+                    , openNowToggle model 2
                     ]
                 , cell
                     [ size Desktop 2, size Tablet 2, size Phone 2 ]
-                    [ div
-                        []
-                        [ Button.render Mdl
-                            [ 1 ]
-                            mdl
-                            [ Button.onClick FetchRestaurants
-                            , Button.raised
-                            , Button.colored
-                            , css "width" "100%"
-                            ]
-                            [ text "Search" ]
-                        ]
-                    ]
+                    [ searchButton model 3 ]
                 , cell
                     [ size Desktop 10
                     , offset Desktop 1
@@ -120,18 +81,102 @@ view model =
                     , offset Tablet 1
                     , size Phone 4
                     ]
-                    [ Options.div
-                        [ css "display" "flex"
-                        , css "flex-flow" "row wrap"
-                        , css "justify-content" "center"
-                        , css "width" "100%"
-                        , Options.attribute <| Attr.attribute "role" "list"
-                        , Elevation.e2
-                        ]
-                        (List.indexedMap (restaurantCard model) restaurants)
-                    ]
+                    [ listOfRestaurants model ]
                 ]
             ]
+
+
+includeCasualRestaurantsToggle : Model -> Int -> Html Msg
+includeCasualRestaurantsToggle model idNumber =
+    let
+        { includeCasualInSearch, mdl } =
+            model
+    in
+        Toggles.checkbox Mdl
+            [ idNumber ]
+            model.mdl
+            [ Toggles.value includeCasualInSearch
+            , Toggles.ripple
+            , Toggles.onClick ToggleCasual
+            , Options.inner
+                [ Options.attribute <| Attr.attribute "aria-label" "Include casual restaurants"
+                ]
+            ]
+            [ text "Casual" ]
+
+
+includeFancyRestaurantsToggle : Model -> Int -> Html Msg
+includeFancyRestaurantsToggle model idNumber =
+    let
+        { includeFancyInSearch, mdl } =
+            model
+    in
+        Toggles.checkbox Mdl
+            [ idNumber ]
+            model.mdl
+            [ Toggles.value includeFancyInSearch
+            , Toggles.ripple
+            , Toggles.onClick ToggleFancy
+            , Options.inner
+                [ Options.attribute <| Attr.attribute "aria-label" "Include fancy restaurants"
+                ]
+            ]
+            [ text "Fancy" ]
+
+
+openNowToggle : Model -> Int -> Html Msg
+openNowToggle model idNumber =
+    let
+        { openNow, mdl } =
+            model
+    in
+        Toggles.checkbox Mdl
+            [ idNumber ]
+            mdl
+            [ Toggles.onClick ToggleOpenNow
+            , value openNow
+            , Options.inner
+                [ Options.attribute <| Attr.attribute "aria-label" "Include only open restaurants." ]
+            ]
+            [ text "Open now" ]
+
+
+searchButton : Model -> Int -> Html Msg
+searchButton model idNumber =
+    let
+        { mdl } =
+            model
+    in
+        Button.render Mdl
+            [ idNumber ]
+            mdl
+            [ Button.onClick FetchRestaurants
+            , Button.raised
+            , Button.colored
+            , css "width" "100%"
+            ]
+            [ text "Search" ]
+
+
+listOfRestaurants : Model -> Html Msg
+listOfRestaurants model =
+    let
+        { restaurants } =
+            model
+    in
+        if List.isEmpty restaurants then
+            Options.div [] []
+        else
+            Options.div
+                [ css "display" "flex"
+                , css "flex-flow" "row wrap"
+                , css "justify-content" "center"
+                , css "width" "100%"
+                , Options.attribute <| Attr.hidden (List.isEmpty restaurants)
+                , Options.attribute <| Attr.attribute "role" "list"
+                , Elevation.e2
+                ]
+                (List.indexedMap (restaurantCard model) restaurants)
 
 
 restaurantCard : Model -> Int -> RestaurantPreview -> Html Msg

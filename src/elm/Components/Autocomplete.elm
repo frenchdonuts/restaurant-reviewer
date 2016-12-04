@@ -303,32 +303,54 @@ view config state data =
                 Nothing ->
                     state.query
 
+        comboxboxAttributes =
+            [ attribute "role" "combobox"
+            , attribute "aria-owns" <| state.autocompleteId ++ "-input"
+            , attribute "aria-expanded" <| String.toLower <| toString state.showMenu
+            , attribute "aria-haspopup" "listbox"
+            ]
+
+        labelId =
+            config.inputLabel
+                |> String.split " "
+                |> String.join ""
+                |> (++) "-label"
+
+        textboxAttributes =
+            [ attribute "role" "textbox"
+            , attribute "aria-autocomplete" "list"
+            , attribute "aria-labelledby" labelId
+            , attribute "aria-multiline" "false"
+            , id <| state.autocompleteId ++ "-input"
+            ]
+                |> activeDescendant
+                |> ariaControls
+
         activeDescendant attributes =
-            case state.selectedDatum of
-                Just datum ->
-                    (attribute "aria-activedescendant"
-                        (config.toId datum)
-                    )
-                        :: attributes
+            if state.showMenu then
+                case state.selectedDatum of
+                    Just datum ->
+                        (attribute "aria-activedescendant" (descendantId config datum)) :: attributes
 
-                Nothing ->
-                    attributes
+                    Nothing ->
+                        attributes
+            else
+                attributes
 
-        extraAttributes =
-            activeDescendant
-                [ attribute "aria-owns" <| state.autocompleteId ++ "-list"
-                , attribute "aria-expanded" <| String.toLower <| toString state.showMenu
-                , attribute "aria-haspopup" <| String.toLower <| toString state.showMenu
-                , attribute "role" "combobox"
-                , attribute "aria-autocomplete" "list"
-                , attribute "aria-label" config.inputLabel
-                ]
+        ariaControls attributes =
+            if state.showMenu then
+                attribute "aria-controls" (state.autocompleteId ++ "-list") :: attributes
+            else
+                attributes
     in
-        div []
+        div (comboxboxAttributes ++ [ style [ ( "position", "relative" ) ] ])
             (List.append
-                [ Textfield.view Textfield
+                [ span
+                    [ id labelId, hidden True ]
+                    [ text config.inputLabel ]
+                , Textfield.view Textfield
                     state.textfield
-                    [ Options.inner <| List.map Options.attribute <| extraAttributes
+                    [ Options.inner (List.map Options.attribute textboxAttributes)
                     , Textfield.value query
                     , Textfield.onInput SetQuery
                     , Textfield.onFocus OnFocus
@@ -338,7 +360,6 @@ view config state data =
                     , Textfield.floatingLabel
                     , Textfield.text_
                     , Options.css "width" "100%"
-                    , Options.id <| state.autocompleteId ++ "-input"
                     ]
                 ]
                 menu
@@ -356,8 +377,7 @@ acceptableData query toId data =
 
 viewMenu : ViewConfig a -> Int -> State a -> List a -> Html Msg
 viewMenu config howManyToShow state data =
-    div [ style [ ( "position", "relative" ) ] ]
-        [ Html.map SetAutoState (Menu.view (viewConfig config state.autocompleteId) howManyToShow state.autoState (acceptableData state.query config.toId data)) ]
+    Html.map SetAutoState (Menu.view (viewConfig config state.autocompleteId) howManyToShow state.autoState (acceptableData state.query config.toId data))
 
 
 updateConfig : UpdateConfig msg a -> Menu.UpdateConfig Msg a
@@ -381,10 +401,21 @@ updateConfig config =
         }
 
 
+descendantId : ViewConfig a -> a -> String
+descendantId config datum =
+    config.toId datum
+        |> String.split " "
+        |> String.join ""
+
+
 viewConfig : ViewConfig a -> String -> Menu.ViewConfig a
 viewConfig config autocompleteId =
     Menu.viewConfig
-        { toId = config.toId
-        , ul = config.ul ++ [ id <| autocompleteId ++ "-list" ]
+        { toId = descendantId config
+        , ul =
+            config.ul
+                ++ [ id <| autocompleteId ++ "-list"
+                   , attribute "role" "listbox"
+                   ]
         , li = config.li
         }

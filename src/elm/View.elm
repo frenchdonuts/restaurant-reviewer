@@ -6,6 +6,7 @@ import Types exposing (..)
 import Views.Pages.Home as Home
 import Views.Pages.RestaurantDetail as RestaurantDetail
 import Html exposing (Html, div, ul, text, img, span)
+import Html.Attributes as Attrs
 import Material.Layout as Layout
 import Material.Options as Options exposing (css)
 
@@ -52,7 +53,8 @@ header model =
         , Layout.spacer
         , Layout.navigation []
             [ Layout.link
-                [ Layout.href "https://github.com/frenchdonuts/restaurant-reviewer" ]
+                [ Layout.href "https://github.com/frenchdonuts/restaurant-reviewer"
+                ]
                 [ span [] [ text "github" ] ]
             ]
         ]
