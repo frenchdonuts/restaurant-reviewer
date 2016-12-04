@@ -16,6 +16,7 @@ import Material.Button as Button exposing (render, colored, primary)
 import Material.Elevation as Elevation
 import Material.Options as Options exposing (css)
 import Material.Color as Color
+import Json.Decode as Json
 
 
 cuisineAutocompleteViewConfig : Autocomplete.ViewConfig Cuisine
@@ -214,6 +215,27 @@ restaurantCard { indexOfElevatedCard } i r =
                         "3"
                     else
                         "0"
+
+        options =
+            { preventDefault = True, stopPropagation = False }
+
+        enterKeyDecoder =
+            let
+                tagger code =
+                    if code == 13 then
+                        Ok (OnRestaurantClick r)
+                    else
+                        Err "not handling that key"
+            in
+                Json.map tagger Events.keyCode |> Json.andThen fromResult
+
+        fromResult result =
+            case result of
+                Ok val ->
+                    Json.succeed val
+
+                Err reason ->
+                    Json.fail reason
     in
         Card.view
             [ css "height" "138px"
@@ -224,10 +246,11 @@ restaurantCard { indexOfElevatedCard } i r =
             , elevation
             , Options.attribute <| Events.onMouseEnter <| MouseEnterRestaurantCard (Just i)
             , Options.attribute <| Events.onMouseLeave <| MouseEnterRestaurantCard Nothing
-            , Options.attribute <| Events.onFocus <| MouseEnterRestaurantCard (Just i)
-            , Options.attribute <| Events.onBlur <| MouseEnterRestaurantCard Nothing
             , Options.attribute <| Events.onClick <| OnRestaurantClick r
             , Options.attribute <| Attr.tabindex 0
+            , Options.attribute <| Events.onFocus <| MouseEnterRestaurantCard (Just i)
+            , Options.attribute <| Events.onBlur <| MouseEnterRestaurantCard Nothing
+            , Options.attribute <| Events.onWithOptions "keydown" options enterKeyDecoder
             ]
             [ Card.title
                 [ Options.attribute <| Attr.attribute "role" "listitem"
