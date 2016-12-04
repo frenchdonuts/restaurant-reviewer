@@ -23,10 +23,3 @@ label.mdl-textfield__label {
 button.mdl-js-button.mdl-button.mdl-button--icon:focus {
     outline: 2px solid rgb(255,193,7)
 }
-
-/* Make the grid holding the list of Restaurants palatable on mobile */
-@media (max-width: 479px) {
-    .mdl-grid {
-        padding: 0px;
-    }
-}

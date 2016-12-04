@@ -168,10 +168,8 @@ listOfRestaurants model =
         cardCell i restaurant =
             cell
                 [ size Desktop 6
-                , size Tablet 4
+                , size Tablet 8
                 , size Phone 4
-                , css "width" "100%"
-                , css "margin" "0px"
                 ]
                 [ restaurantCard model i restaurant ]
     in
@@ -180,10 +178,10 @@ listOfRestaurants model =
         else
             grid
                 [ css "width" "100%"
+                , css "background-color" "transparent"
+                , noSpacing
                 , Options.attribute <| Attr.hidden (List.isEmpty restaurants)
                 , Options.attribute <| Attr.attribute "role" "list"
-                , Color.background Color.primary
-                , Elevation.e2
                 ]
                 (List.indexedMap cardCell restaurants)
 
