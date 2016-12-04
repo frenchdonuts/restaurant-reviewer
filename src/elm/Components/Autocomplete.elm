@@ -305,10 +305,15 @@ view config state data =
 
         comboxboxAttributes =
             [ attribute "role" "combobox"
-            , attribute "aria-owns" <| state.autocompleteId ++ "-input"
             , attribute "aria-expanded" <| String.toLower <| toString state.showMenu
-            , attribute "aria-haspopup" "listbox"
             ]
+                |> ariaHasPopup
+
+        ariaHasPopup attributes =
+            if state.showMenu then
+                (attribute "aria-haspopup" "listbox") :: attributes
+            else
+                attributes
 
         labelId =
             config.inputLabel
@@ -321,12 +326,11 @@ view config state data =
             , attribute "aria-autocomplete" "list"
             , attribute "aria-labelledby" labelId
             , attribute "aria-multiline" "false"
-            , id <| state.autocompleteId ++ "-input"
             ]
-                |> activeDescendant
+                |> ariaActiveDescendant
                 |> ariaControls
 
-        activeDescendant attributes =
+        ariaActiveDescendant attributes =
             if state.showMenu then
                 case state.selectedDatum of
                     Just datum ->
