@@ -146,7 +146,7 @@ update config msg state data =
 
         Wrap toTop ->
             case state.selectedDatum of
-                Just person ->
+                Just datum ->
                     update config Reset state data
 
                 Nothing ->
@@ -161,6 +161,7 @@ update config msg state data =
                             ( { state
                                 | autoState = Menu.resetToLastItem (updateConfig config) filteredData howManyToShow state.autoState
                                 , selectedDatum = List.head <| List.reverse <| filteredData
+                                , showMenu = True
                               }
                             , Cmd.none
                             , Nothing
@@ -169,6 +170,7 @@ update config msg state data =
                             ( { state
                                 | autoState = Menu.resetToFirstItem (updateConfig config) filteredData howManyToShow state.autoState
                                 , selectedDatum = List.head <| filteredData
+                                , showMenu = True
                               }
                             , Cmd.none
                             , Nothing
@@ -202,7 +204,13 @@ update config msg state data =
                 )
 
         PreviewDatum id ->
-            ( { state | selectedDatum = getDatumAtId data config.toId id }, Cmd.none, Nothing )
+            ( { state
+                | selectedDatum = getDatumAtId data config.toId id
+                , showMenu = True
+              }
+            , Cmd.none
+            , Nothing
+            )
 
         OnFocus ->
             ( state, Cmd.none, Nothing )
