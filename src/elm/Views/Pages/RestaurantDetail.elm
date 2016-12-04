@@ -476,6 +476,12 @@ userReview review m =
                 ++ (localTime |> Time.day >> toString)
                 ++ "/"
                 ++ (localTime |> Time.year >> toString)
+
+        s =
+            if rating == One then
+                ""
+            else
+                "s"
     in
         List.li
             [ List.withBody
@@ -506,6 +512,7 @@ userReview review m =
                             , css "position" "relative"
                             , css "top" "5px"
                             ]
+                        , Html.text s
                         ]
                     , Options.span
                         [ css "color" "rgb(89,89,89)"
