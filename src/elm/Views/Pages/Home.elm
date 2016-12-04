@@ -163,20 +163,28 @@ listOfRestaurants model =
     let
         { restaurants } =
             model
+
+        cardCell i restaurant =
+            cell
+                [ size Desktop 6
+                , size Tablet 4
+                , size Phone 4
+                , css "width" "100%"
+                , css "margin" "0px"
+                ]
+                [ restaurantCard model i restaurant ]
     in
         if List.isEmpty restaurants then
             Options.div [] []
         else
-            Options.div
-                [ css "display" "flex"
-                , css "flex-flow" "row wrap"
-                , css "justify-content" "center"
-                , css "width" "100%"
+            grid
+                [ css "width" "100%"
                 , Options.attribute <| Attr.hidden (List.isEmpty restaurants)
                 , Options.attribute <| Attr.attribute "role" "list"
+                , Color.background Color.primary
                 , Elevation.e2
                 ]
-                (List.indexedMap (restaurantCard model) restaurants)
+                (List.indexedMap cardCell restaurants)
 
 
 restaurantCard : Model -> Int -> RestaurantPreview -> Html Msg
@@ -209,7 +217,7 @@ restaurantCard { indexOfElevatedCard } i r =
     in
         Card.view
             [ css "height" "138px"
-            , css "width" "50%"
+            , css "width" "100%"
             , css "z-index" zIndex
             , Color.background Color.primary
             , Elevation.transition 250
