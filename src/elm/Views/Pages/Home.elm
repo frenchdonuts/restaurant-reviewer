@@ -224,7 +224,10 @@ restaurantCard { indexOfElevatedCard } i r =
             , elevation
             , Options.attribute <| Events.onMouseEnter <| MouseEnterRestaurantCard (Just i)
             , Options.attribute <| Events.onMouseLeave <| MouseEnterRestaurantCard Nothing
+            , Options.attribute <| Events.onFocus <| MouseEnterRestaurantCard (Just i)
+            , Options.attribute <| Events.onBlur <| MouseEnterRestaurantCard Nothing
             , Options.attribute <| Events.onClick <| OnRestaurantClick r
+            , Options.attribute <| Attr.tabindex 0
             ]
             [ Card.title
                 [ Options.attribute <| Attr.attribute "role" "listitem"
