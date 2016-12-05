@@ -18,6 +18,7 @@ import Material.Elevation as Elevation
 import Material.Options as Options exposing (css)
 import Material.Color as Color
 import Material.Icon as Icon
+import Material.Typography as Typography
 import Json.Decode as Json
 
 
@@ -106,6 +107,40 @@ listOfRestaurants model =
         { restaurants } =
             model
 
+        restaurantGrid =
+            if List.isEmpty restaurants then
+                grid
+                    [ css "background-color" "transparent"
+                    , css "width" "100%"
+                    , noSpacing
+                    ]
+                    [ placeHolder
+                    ]
+            else
+                grid
+                    [ css "background-color" "transparent"
+                    , css "width" "100%"
+                    , noSpacing
+                    , Options.attribute <| Attr.attribute "role" "list"
+                    ]
+                    (List.indexedMap cardCell <| filterRestaurants model restaurants)
+
+        placeHolder =
+            cell
+                [ size Desktop 12
+                , size Tablet 8
+                , size Phone 4
+                , css "height" <| (toString placeHolderHeight) ++ "px"
+                , Color.background <| Color.color Color.Grey Color.S200
+                , css "text-align" "center"
+                , css "padding-top" <| (toString <| placeHolderHeight / 2 - 17) ++ "px"
+                , Typography.display1
+                ]
+                [ Html.text "No restaurants to display" ]
+
+        placeHolderHeight =
+            400
+
         cardCell i restaurant =
             cell
                 [ size Desktop 6
@@ -114,26 +149,52 @@ listOfRestaurants model =
                 ]
                 [ restaurantCard model i restaurant ]
     in
-        if List.isEmpty restaurants then
-            Options.div [] []
-        else
-            Options.div
-                []
-                [ Options.div
-                    [ css "height" "32px"
-                    , Color.background Color.white
-                    , Elevation.e2
-                    ]
-                    [ filterMenu model 7
-                    ]
-                , grid
-                    [ css "background-color" "transparent"
-                    , noSpacing
-                    , Options.attribute <| Attr.hidden (List.isEmpty restaurants)
-                    , Options.attribute <| Attr.attribute "role" "list"
-                    ]
-                    (List.indexedMap cardCell restaurants)
+        Options.div
+            []
+            [ Options.div
+                [ css "height" "32px"
+                , Color.background Color.white
+                , Elevation.e2
                 ]
+                [ filterMenu model 7
+                , restaurantGrid
+                ]
+            ]
+
+
+filterRestaurants : Model -> List RestaurantPreview -> List RestaurantPreview
+filterRestaurants { includeCasualInSearch, includeFancyInSearch, openNow } rs =
+    let
+        priceLevel r =
+            Maybe.withDefault -1 (r.priceLevel)
+
+        isCasual r =
+            Debug.log (r.name ++ " isCasual: ") <|
+                0
+                    <= (priceLevel r)
+                    && (priceLevel r)
+                    <= 2
+
+        isFancy r =
+            --Debug.log (r.name ++ " isFancy: ") <|
+            3
+                <= (priceLevel r)
+                && (priceLevel r)
+                <= 4
+
+        isOpenNow r =
+            --Debug.log (r.name ++ " isOpen: ") <|
+            Maybe.withDefault False r.openNow
+                == openNow
+
+        filter r =
+            if not openNow then
+                ((includeCasualInSearch && isCasual r) || (includeFancyInSearch && isFancy r))
+            else
+                ((includeCasualInSearch && isCasual r) || (includeFancyInSearch && isFancy r))
+                    && isOpenNow r
+    in
+        List.filter filter rs
 
 
 filterMenu : Model -> Int -> Html Msg
@@ -245,7 +306,6 @@ filterMenu model idNumber =
              , css "float" "right"
              , Color.background Color.white
              , Options.attribute <| Attr.attribute "role" "menu"
-             , Options.attribute <| Attr.attribute "aria-owns" "Casual Fancy OpenNow"
              ]
                 |> ariaActiveDescendant
             )

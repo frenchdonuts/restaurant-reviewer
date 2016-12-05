@@ -43,6 +43,41 @@ getRestaurants lat long selectedCuisine model =
         Http.get url (field "results" (Json.list decodeRestaurantPreview))
 
 
+queryParameters : Cuisine -> Model -> List ( String, String )
+queryParameters cuisine { includeCasualInSearch, includeFancyInSearch, openNow, cuisineAutocomplete } =
+    let
+        minprice =
+            case includeCasualInSearch of
+                True ->
+                    "0"
+
+                False ->
+                    "3"
+
+        maxprice =
+            case includeFancyInSearch of
+                True ->
+                    "4"
+
+                False ->
+                    "2"
+
+        parameters =
+            [ ( "query", cuisineString cuisine ++ " restaurant" )
+              --, ( "minprice", minprice )
+              --, ( "maxprice", maxprice )
+            ]
+    in
+        parameters
+
+
+
+--if openNow then
+--    ( "opennow", "" ) :: parameters
+--else
+--    parameters
+
+
 mockGetRestaurant : String -> Http.Request Restaurant
 mockGetRestaurant id =
     let
@@ -220,43 +255,13 @@ toPhotoUrl reference =
 
 decodeRestaurantPreview : Json.Decoder RestaurantPreview
 decodeRestaurantPreview =
-    Json.map5 RestaurantPreview
+    Json.map6 RestaurantPreview
         (field "place_id" Json.string)
         (field "name" Json.string)
         (field "types" <| Json.list Json.string)
         (field "formatted_address" Json.string)
         (Json.maybe << field "opening_hours" <| field "open_now" Json.bool)
-
-
-queryParameters : Cuisine -> Model -> List ( String, String )
-queryParameters cuisine { includeCasualInSearch, includeFancyInSearch, openNow, cuisineAutocomplete } =
-    let
-        minprice =
-            case includeCasualInSearch of
-                True ->
-                    "0"
-
-                False ->
-                    "3"
-
-        maxprice =
-            case includeFancyInSearch of
-                True ->
-                    "4"
-
-                False ->
-                    "2"
-
-        parameters =
-            [ ( "query", cuisineString cuisine ++ " restaurant" )
-            , ( "minprice", minprice )
-            , ( "maxprice", maxprice )
-            ]
-    in
-        if openNow then
-            ( "opennow", "" ) :: parameters
-        else
-            parameters
+        (Json.maybe <| field "price_level" Json.int)
 
 
 cuisineString : Cuisine -> String

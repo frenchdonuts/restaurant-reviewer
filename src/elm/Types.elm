@@ -15,6 +15,7 @@ type alias RestaurantPreview =
     , types : List String
     , address : String
     , openNow : Maybe Bool
+    , priceLevel : Maybe Int
     }
 
 

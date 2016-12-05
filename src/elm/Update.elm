@@ -250,7 +250,7 @@ update msg model =
             SelectedCuisine cuisine ->
                 { model | selectedCuisine = cuisine } ! []
 
-            -- Filter Menu
+            {--Filter Menu --}
             ToggleMenu ->
                 ( { model | menuOpen = not model.menuOpen }, Cmd.none )
 
