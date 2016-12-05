@@ -32,6 +32,8 @@ init location =
     , mdl = Material.model
     , cuisineAutocomplete = Autocomplete.init "cuisine"
     , selectedCuisine = NoPreference
+    , menuOpen = False
+    , indexOfMousedMenuItem = Nothing
     , includeCasualInSearch = True
     , includeFancyInSearch = True
     , openNow = False
@@ -247,6 +249,13 @@ update msg model =
 
             SelectedCuisine cuisine ->
                 { model | selectedCuisine = cuisine } ! []
+
+            -- Filter Menu
+            ToggleMenu ->
+                ( { model | menuOpen = not model.menuOpen }, Cmd.none )
+
+            MouseEnterMenuItem maybeIndex ->
+                { model | indexOfMousedMenuItem = maybeIndex } ! []
 
             -- Price Selector - make sure at least one of them is always True
             ToggleCasual ->

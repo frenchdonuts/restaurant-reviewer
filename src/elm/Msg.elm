@@ -23,6 +23,9 @@ type Msg
       -- Cuisine Selector (Autocomplete, Home page)
     | CuisineAutocomplete Autocomplete.Msg
     | SelectedCuisine Cuisine
+      -- Filter Menu
+    | ToggleMenu
+    | MouseEnterMenuItem (Maybe Int)
       -- Price Selector
     | ToggleCasual
     | ToggleFancy

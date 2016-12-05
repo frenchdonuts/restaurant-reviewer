@@ -14,6 +14,8 @@ type alias Model =
     , errMsg : String
     , cuisineAutocomplete : Autocomplete.State Cuisine
     , selectedCuisine : Cuisine
+    , menuOpen : Bool
+    , indexOfMousedMenuItem : Maybe Int
     , includeCasualInSearch : Bool
     , includeFancyInSearch : Bool
     , openNow : Bool

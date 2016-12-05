@@ -30,6 +30,7 @@ type alias State a =
     , showMenu : Bool
     , textfield : Textfield.Model
     , autocompleteId : String
+    , focused : Bool
     }
 
 
@@ -42,6 +43,7 @@ init autocompleteId =
     , showMenu = False
     , textfield = Textfield.defaultModel
     , autocompleteId = autocompleteId
+    , focused = False
     }
 
 
@@ -73,156 +75,166 @@ type alias UpdateConfig msg data =
 
 update : UpdateConfig msg a -> Msg -> State a -> List a -> ( State a, Cmd Msg, Maybe msg )
 update config msg state data =
-    case msg of
-        SetQuery newQuery ->
-            let
-                filteredData =
-                    acceptableData newQuery config.toId data
+    if not state.focused then
+        case msg of
+            OnFocus ->
+                ( { state | focused = True }, Cmd.none, Nothing )
 
-                showMenu =
-                    not << List.isEmpty <| filteredData
+            _ ->
+                ( state, Cmd.none, Nothing )
+    else
+        case msg of
+            SetQuery newQuery ->
+                let
+                    filteredData =
+                        acceptableData newQuery config.toId data
 
-                selectedDatum =
-                    if List.length filteredData == 1 then
-                        List.head filteredData
-                    else
-                        Nothing
-            in
-                ( { state | query = newQuery, showMenu = showMenu, selectedDatum = selectedDatum }, Cmd.none, Nothing )
+                    showMenu =
+                        not << List.isEmpty <| filteredData
 
-        SetAutoState autoMsg ->
-            let
-                filteredData =
-                    Debug.log "filteredData" <| acceptableData state.query config.toId data
-
-                howManyToShow =
-                    List.length filteredData
-
-                ( newState, maybeMsg ) =
-                    Menu.update (updateConfig config) autoMsg howManyToShow state.autoState filteredData
-
-                newModel =
-                    { state | autoState = newState }
-            in
-                case maybeMsg of
-                    Nothing ->
-                        ( newModel, Cmd.none, Nothing )
-
-                    Just updateMsg ->
-                        let
-                            log =
-                                Debug.log "updateMsg from Menu subcomponent" updateMsg
-                        in
-                            update config updateMsg newModel data
-
-        HandleEscape ->
-            let
-                validOptions =
-                    not <| List.isEmpty (acceptableData state.query config.toId data)
-
-                handleEscape =
-                    if validOptions then
-                        state
-                            |> removeSelection
-                            |> resetMenu
-                    else
-                        { state | query = "" }
-                            |> removeSelection
-                            |> resetMenu
-
-                escapedModel =
-                    case state.selectedDatum of
-                        Just datum ->
-                            if state.query == (config.toId datum) then
-                                state
-                                    |> resetInput
-                            else
-                                handleEscape
-
-                        Nothing ->
-                            handleEscape
-            in
-                ( escapedModel, Cmd.none, Nothing )
-
-        Wrap toTop ->
-            case state.selectedDatum of
-                Just datum ->
-                    update config Reset state data
-
-                Nothing ->
-                    let
-                        filteredData =
-                            acceptableData state.query config.toId data
-
-                        howManyToShow =
-                            List.length filteredData
-                    in
-                        if toTop then
-                            ( { state
-                                | autoState = Menu.resetToLastItem (updateConfig config) filteredData howManyToShow state.autoState
-                                , selectedDatum = List.head <| List.reverse <| filteredData
-                                , showMenu = True
-                              }
-                            , Cmd.none
-                            , Nothing
-                            )
+                    selectedDatum =
+                        if List.length filteredData == 1 then
+                            List.head filteredData
                         else
-                            ( { state
-                                | autoState = Menu.resetToFirstItem (updateConfig config) filteredData howManyToShow state.autoState
-                                , selectedDatum = List.head <| filteredData
-                                , showMenu = True
-                              }
-                            , Cmd.none
-                            , Nothing
-                            )
+                            Nothing
+                in
+                    ( { state | query = newQuery, showMenu = showMenu, selectedDatum = selectedDatum }, Cmd.none, Nothing )
 
-        Reset ->
-            ( { state | autoState = Menu.reset (updateConfig config) state.autoState, selectedDatum = Nothing }
-            , Cmd.none
-            , Nothing
-            )
+            SetAutoState autoMsg ->
+                let
+                    filteredData =
+                        Debug.log "filteredData" <| acceptableData state.query config.toId data
 
-        SelectDatumKeyboard id ->
-            let
-                newModel =
-                    setQuery state config.toId id data
-                        |> resetMenu
-            in
-                ( newModel, Cmd.none, Just (config.onSelectChoice newModel.selectedDatum) )
+                    howManyToShow =
+                        List.length filteredData
 
-        SelectDatumMouse id ->
-            let
-                newModel =
-                    setQuery state config.toId id data
-                        |> resetMenu
-            in
-                ( newModel
-                , Task.perform
-                    (\_ -> NoOp)
-                    (Dom.focus (state.autocompleteId ++ "-input") |> Task.onError (\err -> Task.succeed ()))
+                    ( newState, maybeMsg ) =
+                        Menu.update (updateConfig config) autoMsg howManyToShow state.autoState filteredData
+
+                    newModel =
+                        { state | autoState = newState }
+                in
+                    case maybeMsg of
+                        Nothing ->
+                            ( newModel, Cmd.none, Nothing )
+
+                        Just updateMsg ->
+                            let
+                                log =
+                                    Debug.log "updateMsg from Menu subcomponent" updateMsg
+                            in
+                                update config updateMsg newModel data
+
+            HandleEscape ->
+                let
+                    validOptions =
+                        not <| List.isEmpty (acceptableData state.query config.toId data)
+
+                    handleEscape =
+                        if validOptions then
+                            state
+                                |> removeSelection
+                                |> resetMenu
+                        else
+                            { state | query = "" }
+                                |> removeSelection
+                                |> resetMenu
+
+                    escapedModel =
+                        case state.selectedDatum of
+                            Just datum ->
+                                if state.query == (config.toId datum) then
+                                    state
+                                        |> resetInput
+                                else
+                                    handleEscape
+
+                            Nothing ->
+                                handleEscape
+                in
+                    ( escapedModel, Cmd.none, Nothing )
+
+            Wrap toTop ->
+                case state.selectedDatum of
+                    Just datum ->
+                        update config Reset state data
+
+                    Nothing ->
+                        let
+                            filteredData =
+                                acceptableData state.query config.toId data
+
+                            howManyToShow =
+                                List.length filteredData
+                        in
+                            if toTop then
+                                ( { state
+                                    | autoState = Menu.resetToLastItem (updateConfig config) filteredData howManyToShow state.autoState
+                                    , selectedDatum = List.head <| List.reverse <| filteredData
+                                    , showMenu = True
+                                  }
+                                , Cmd.none
+                                , Nothing
+                                )
+                            else
+                                ( { state
+                                    | autoState = Menu.resetToFirstItem (updateConfig config) filteredData howManyToShow state.autoState
+                                    , selectedDatum = List.head <| filteredData
+                                    , showMenu = True
+                                  }
+                                , Cmd.none
+                                , Nothing
+                                )
+
+            Reset ->
+                ( { state | autoState = Menu.reset (updateConfig config) state.autoState, selectedDatum = Nothing }
+                , Cmd.none
                 , Nothing
                 )
 
-        PreviewDatum id ->
-            ( { state
-                | selectedDatum = getDatumAtId data config.toId id
-                , showMenu = True
-              }
-            , Cmd.none
-            , Nothing
-            )
+            SelectDatumKeyboard id ->
+                let
+                    newModel =
+                        setQuery state config.toId id data
+                            |> resetMenu
+                in
+                    ( newModel, Cmd.none, Just (config.onSelectChoice newModel.selectedDatum) )
 
-        OnFocus ->
-            ( state, Cmd.none, Nothing )
+            SelectDatumMouse id ->
+                let
+                    newModel =
+                        setQuery state config.toId id data
+                            |> resetMenu
+                in
+                    ( newModel
+                    , Task.perform
+                        (\_ -> NoOp)
+                        (Dom.focus (state.autocompleteId ++ "-input") |> Task.onError (\err -> Task.succeed ()))
+                    , Nothing
+                    )
 
-        OnBlur ->
-            ( resetMenu state, Cmd.none, Just (config.onSelectChoice state.selectedDatum) )
+            PreviewDatum id ->
+                ( { state
+                    | selectedDatum =
+                        getDatumAtId data config.toId id
+                        --, showMenu = state.focused
+                  }
+                , Cmd.none
+                , Nothing
+                )
 
-        Textfield msg ->
-            ( { state | textfield = Textfield.update msg state.textfield }, Cmd.none, Nothing )
+            OnBlur ->
+                let
+                    newState =
+                        resetMenu state
+                in
+                    ( { newState | focused = False }, Cmd.none, Just (config.onSelectChoice state.selectedDatum) )
 
-        NoOp ->
-            ( state, Cmd.none, Nothing )
+            Textfield msg ->
+                ( { state | textfield = Textfield.update msg state.textfield }, Cmd.none, Nothing )
+
+            _ ->
+                ( state, Cmd.none, Nothing )
 
 
 resetInput : State a -> State a
