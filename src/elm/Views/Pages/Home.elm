@@ -69,13 +69,7 @@ view model =
                         (Autocomplete.view cuisineAutocompleteViewConfig cuisineAutocomplete cuisines)
                     ]
                 , cell
-                    [ size Desktop 2, size Tablet 2, size Phone 2, offset Desktop 4, offset Tablet 2 ]
-                    [ includeCasualRestaurantsToggle model 0
-                    , includeFancyRestaurantsToggle model 1
-                    , openNowToggle model 2
-                    ]
-                , cell
-                    [ size Desktop 2, size Tablet 2, size Phone 2 ]
+                    [ size Desktop 4, offset Desktop 4, size Tablet 4, offset Tablet 2, size Phone 4 ]
                     [ searchButton model 3 ]
                 , cell
                     [ size Desktop 10
@@ -87,61 +81,6 @@ view model =
                     [ listOfRestaurants model ]
                 ]
             ]
-
-
-includeCasualRestaurantsToggle : Model -> Int -> Html Msg
-includeCasualRestaurantsToggle model idNumber =
-    let
-        { includeCasualInSearch, mdl } =
-            model
-    in
-        Toggles.checkbox Mdl
-            [ idNumber ]
-            model.mdl
-            [ Toggles.value includeCasualInSearch
-            , Toggles.ripple
-            , Toggles.onClick ToggleCasual
-            , Options.inner
-                [ Options.attribute <| Attr.attribute "aria-label" "Include casual restaurants"
-                ]
-            ]
-            [ text "Casual" ]
-
-
-includeFancyRestaurantsToggle : Model -> Int -> Html Msg
-includeFancyRestaurantsToggle model idNumber =
-    let
-        { includeFancyInSearch, mdl } =
-            model
-    in
-        Toggles.checkbox Mdl
-            [ idNumber ]
-            model.mdl
-            [ Toggles.value includeFancyInSearch
-            , Toggles.ripple
-            , Toggles.onClick ToggleFancy
-            , Options.inner
-                [ Options.attribute <| Attr.attribute "aria-label" "Include fancy restaurants"
-                ]
-            ]
-            [ text "Fancy" ]
-
-
-openNowToggle : Model -> Int -> Html Msg
-openNowToggle model idNumber =
-    let
-        { openNow, mdl } =
-            model
-    in
-        Toggles.checkbox Mdl
-            [ idNumber ]
-            mdl
-            [ Toggles.onClick ToggleOpenNow
-            , value openNow
-            , Options.inner
-                [ Options.attribute <| Attr.attribute "aria-label" "Include only open restaurants." ]
-            ]
-            [ text "Open now" ]
 
 
 searchButton : Model -> Int -> Html Msg
@@ -402,3 +341,58 @@ restaurantCard { indexOfElevatedCard } i r =
                 , Card.subhead [ Color.text Color.white ] [ text address ]
                 ]
             ]
+
+
+includeCasualRestaurantsToggle : Model -> Int -> Html Msg
+includeCasualRestaurantsToggle model idNumber =
+    let
+        { includeCasualInSearch, mdl } =
+            model
+    in
+        Toggles.checkbox Mdl
+            [ idNumber ]
+            model.mdl
+            [ Toggles.value includeCasualInSearch
+            , Toggles.ripple
+            , Toggles.onClick ToggleCasual
+            , Options.inner
+                [ Options.attribute <| Attr.attribute "aria-label" "Include casual restaurants"
+                ]
+            ]
+            [ text "Casual" ]
+
+
+includeFancyRestaurantsToggle : Model -> Int -> Html Msg
+includeFancyRestaurantsToggle model idNumber =
+    let
+        { includeFancyInSearch, mdl } =
+            model
+    in
+        Toggles.checkbox Mdl
+            [ idNumber ]
+            model.mdl
+            [ Toggles.value includeFancyInSearch
+            , Toggles.ripple
+            , Toggles.onClick ToggleFancy
+            , Options.inner
+                [ Options.attribute <| Attr.attribute "aria-label" "Include fancy restaurants"
+                ]
+            ]
+            [ text "Fancy" ]
+
+
+openNowToggle : Model -> Int -> Html Msg
+openNowToggle model idNumber =
+    let
+        { openNow, mdl } =
+            model
+    in
+        Toggles.checkbox Mdl
+            [ idNumber ]
+            mdl
+            [ Toggles.onClick ToggleOpenNow
+            , value openNow
+            , Options.inner
+                [ Options.attribute <| Attr.attribute "aria-label" "Include only open restaurants." ]
+            ]
+            [ text "Open now" ]
