@@ -23,3 +23,25 @@ label.mdl-textfield__label {
 button.mdl-js-button.mdl-button.mdl-button--icon:focus {
     outline: 2px solid rgb(255,193,7)
 }
+
+/* Make sure restaurant details show up even if the address is really long */
+@media (max-width: 320px) {
+    .responsive_detail_container {
+        height: 168px
+    }
+}
+@media (max-width: 436px) and (min-width: 321px) {
+    .responsive_detail_container {
+        height: 144px
+    }
+}
+@media (max-width: 479px) and (min-width: 437px) {
+    .responsive_detail_container {
+        height: 128px
+    }
+}
+@media (min-width: 480px) {
+    .responsive_detail_container {
+        height: 120px
+    }
+}

@@ -198,8 +198,8 @@ header r m =
                 ]
                 []
             , Options.div
-                [ css "width" "100%"
-                , css "height" "100px"
+                [ Options.attribute <| Attrs.class "responsive_detail_container"
+                , css "width" "100%"
                 , Options.scrim 0.75
                 , css "position" "absolute"
                 , css "bottom" "0"
@@ -209,6 +209,7 @@ header r m =
                 [ Html.h2 [ invisible ] [ Html.text <| "Details on " ++ r.name ]
                 , title name
                 , subhead address
+                  --"No.G-8, Westend Mall, Janakpuri, Janakpuri District Center, Janakpuri, New Delhi, Delhi 123456 fuck"
                 , subhead openingHoursToday
                 ]
             , Html.fieldset
