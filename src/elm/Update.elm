@@ -5,7 +5,7 @@ import Model exposing (..)
 import Msg exposing (..)
 import Api exposing (..)
 import Nav
-import Helper exposing (cuisines, cuisineString, cuisineStringInverse, prices, intToRating)
+import Helper exposing (cuisines, maybeToCuisine, cuisineToMaybe, cuisineString, cuisineStringInverse, prices, intToRating)
 import Utils exposing (isJust)
 import Zipper1D as Zipper
 import Components.Autocomplete as Autocomplete
@@ -21,6 +21,7 @@ import Material.Layout as Layout
 import Time.DateTime as Time
 import Time as CoreTime
 import UrlParser as Url
+import Maybe.Extra exposing (or)
 
 
 init : Navigation.Location -> ( Model, Cmd Msg )
@@ -152,16 +153,26 @@ update msg model =
                     autocompleteQuery =
                         String.toLower <| Autocomplete.getQuery cuisineAutocomplete
 
-                    selectedCuisine =
-                        case List.head <| List.filter ((==) autocompleteQuery << String.toLower << cuisineString) cuisines of
-                            Just cuisine ->
-                                cuisine
+                    -- TODO: Figure out why autocompleteQuery is still equal to the TYPED query even after User CLICKS on dropdown item
+                    -- Use elm debugger
+                    maybeCuisine =
+                        (cuisineString >> String.toLower >> (==) autocompleteQuery)
+                            |> flip List.filter cuisines
+                            |> List.head
 
-                            Nothing ->
-                                NoPreference
+                    cuisineFilter =
+                        cuisineString
+                            >> String.toLower
+                            >> (==) autocompleteQuery
+
+                    selectedCuisine =
+                        List.filter cuisineFilter cuisines
+                            |> List.head
+                            |> or (cuisineToMaybe model.selectedCuisine)
+                            |> maybeToCuisine
 
                     log =
-                        Debug.log "selectedCuisine" model.selectedCuisine
+                        Debug.log "selectedCuisine" selectedCuisine
 
                     cmd =
                         case model.location of

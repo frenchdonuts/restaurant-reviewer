@@ -59,6 +59,28 @@ cuisines =
     ]
 
 
+cuisineToMaybe : Cuisine -> Maybe Cuisine
+cuisineToMaybe cuisine =
+    case cuisine of
+        NoPreference ->
+            Nothing
+
+        _ ->
+            Just cuisine
+
+
+{-| maybeToCuisine Nothing == maybeToCuisine (Just NoPreference)
+-}
+maybeToCuisine : Maybe Cuisine -> Cuisine
+maybeToCuisine mCuisine =
+    case mCuisine of
+        Nothing ->
+            NoPreference
+
+        Just cuisine ->
+            cuisine
+
+
 cuisineString : Cuisine -> String
 cuisineString cuisine =
     case cuisine of
