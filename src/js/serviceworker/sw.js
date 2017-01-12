@@ -74,8 +74,13 @@ self.addEventListener('fetch', event => {
 })
 
 function isGooglePlacesQuery(url) {
-    // TODO
-    return false
+    // https://maps.googleapis.com/maps/api/place/textsearch/json?query=Japanese%20restaurant&key=AIzaSyBFF9RccdIGE7dOBQdiq8m0EPGNJH51pmg&location=42.350125%2C-71.061832&radius=500
+    var isOfGoogleMapsOrigin = url.origin === "https://maps.googleapis.com"
+    var isPlacesApiQuery = url.pathname.split('/') === ["", "maps", "api",
+        "place", "textsearch", "json"
+    ]
+
+    return isOfGoogleMapsOrigin && isPlacesApiQuery
 }
 
 function isImageFetch(url) {
