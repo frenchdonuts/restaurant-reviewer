@@ -1,8 +1,10 @@
 var staticCacheName = 'restaurant-reviewer-static-v1'
 var contentImgsCache = 'restaurant-reviewer-imgs'
+var jsonCache = 'restaurant-reviewer-json'
 var allCaches = [
     staticCacheName,
-    contentImgsCache
+    contentImgsCache,
+    jsonCache
 ]
 
 const {
@@ -48,14 +50,48 @@ self.addEventListener('activate', event =>
     )
 );
 
-console.log("Adding fetch event listener")
 self.addEventListener('fetch', event => {
     //
     var requestUrl = new URL(event.request.url)
-    event.respondWith(
-        caches.match(event.request).then(cachedResponse => {
-            console.log("hey!")
-            return cachedResponse || fetch(event.request)
-        })
-    )
+    var responsePromise
+
+    if (isGooglePlacesQuery(requestUrl)) {
+        //
+        responsePromise = fetchAndPutInto(jsonCache, event.request)
+    } else if (isImageFetch(requestUrl)) {
+        //
+        responsePromise = fetchAndPutInto(contentImgsCache,
+            event.request)
+    } else {
+        responsePromise = caches.match(event.request).then(
+            cachedResponse => {
+                console.log("Cache hit!")
+                return cachedResponse || fetch(event.request)
+            })
+    }
+
+    event.respondWith(responsePromise)
 })
+
+function isGooglePlacesQuery(url) {
+    // TODO
+    return false
+}
+
+function isImageFetch(url) {
+    // TODO
+    return false
+}
+
+function fetchAndPutInto(cacheName, request) {
+    return caches.open(cacheName)
+        .then(cache => cache.match(request.url))
+        .then(response => {
+            if (response) return response
+
+            return fetch(request).then(networkResponse => {
+                cache.put(request.url, networkResponse.clone())
+                return networkResponse
+            })
+        })
+}
