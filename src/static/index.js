@@ -16,4 +16,5 @@ if ('serviceWorker' in navigator) {
     }
 
     runtime.register()
+    console.log("Registration worked!")
 }
