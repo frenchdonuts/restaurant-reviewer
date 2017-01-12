@@ -65,7 +65,6 @@ self.addEventListener('fetch', event => {
     } else {
         responsePromise = caches.match(event.request).then(
             cachedResponse => {
-                console.log("Cache hit!")
                 return cachedResponse || fetch(event.request)
             })
     }
@@ -75,28 +74,42 @@ self.addEventListener('fetch', event => {
 
 function isGooglePlacesQuery(url) {
     // https://maps.googleapis.com/maps/api/place/textsearch/json?query=Japanese%20restaurant&key=AIzaSyBFF9RccdIGE7dOBQdiq8m0EPGNJH51pmg&location=42.350125%2C-71.061832&radius=500
-    var isOfGoogleMapsOrigin = url.origin === "https://maps.googleapis.com"
-    var isPlacesApiQuery = url.pathname.split('/') === ["", "maps", "api",
-        "place", "textsearch", "json"
-    ]
+    var isOfGoogleMapsOrigin =
+        url.origin === "https://maps.googleapis.com"
+    var isPlacesTextsearchQuery =
+        url.pathname === "/maps/api/place/textsearch/json"
+    var isPlacesDetailQuery =
+        url.pathname === "/maps/api/place/details/json"
 
-    return isOfGoogleMapsOrigin && isPlacesApiQuery
+    return isOfGoogleMapsOrigin && (isPlacesTextsearchQuery ||
+        isPlacesDetailQuery)
 }
 
 function isImageFetch(url) {
-    // TODO
-    return false
+    // https://maps.googleapis.com/maps/api/place/photo?maxwidth=533&photoreference=CoQBdwAAAPSAeF8AS3w4lZpkeFmzhv7Zuweb-5UGHkfTs3m3stqnw9B8eD6vZ8aG88cM9ZIC8jdcP9OsflhjqB7kEEtOoItATRa1LiUsPTCWRPggcDlIwBUHNip6Mjs23u408JCvfSaF9biN7j8lJpuLOFfhHOEYeFqgdpb8tnsnz1jKbX4lEhA85PaB94Le3zCH6MJskHTUGhQli2o-q4MNEc_5779ENNuWvuXkVg&key=AIzaSyBFF9RccdIGE7dOBQdiq8m0EPGNJH51pmg
+    var isOfGoogleMapsOrigin =
+        url.origin === "https://maps.googleapis.com"
+    var isPlacesPhotoQuery =
+        url.pathname === "/maps/api/place/photo"
+
+    return isOfGoogleMapsOrigin && isPlacesPhotoQuery
 }
 
 function fetchAndPutInto(cacheName, request) {
+    console.log("fetchAndPutInto: " + cacheName)
     return caches.open(cacheName)
-        .then(cache => cache.match(request.url))
-        .then(response => {
-            if (response) return response
+        .then(cache => {
+            return cache.match(request.url)
+                .then(response => {
+                    if (response) {
+                        console.log(cacheName + " hit!")
+                        return response
+                    }
 
-            return fetch(request).then(networkResponse => {
-                cache.put(request.url, networkResponse.clone())
-                return networkResponse
-            })
+                    return fetch(request).then(networkResponse => {
+                        cache.put(request.url, networkResponse.clone())
+                        return networkResponse
+                    })
+                })
         })
 }
