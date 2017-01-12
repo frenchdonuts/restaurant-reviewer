@@ -30,7 +30,7 @@ self.addEventListener('activate', event =>
                 ).map(cacheName =>
                     caches.delete(cacheName)
                 )
-            );
+            )
         )
     )
 );
