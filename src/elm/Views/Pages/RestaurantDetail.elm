@@ -209,7 +209,6 @@ header r m =
                 [ Html.h2 [ invisible ] [ Html.text <| "Details on " ++ r.name ]
                 , title name
                 , subhead address
-                  --"No.G-8, Westend Mall, Janakpuri, Janakpuri District Center, Janakpuri, New Delhi, Delhi 123456 fuck"
                 , subhead openingHoursToday
                 ]
             , Html.fieldset
