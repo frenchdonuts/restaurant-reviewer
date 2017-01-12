@@ -48,69 +48,6 @@ init location =
         ! [ Task.attempt Initialized initTask, Layout.sub0 Mdl ]
 
 
-
-{-
-   mockRestaurantDetailInit : ( Model, Cmd Msg )
-   mockRestaurantDetailInit =
-       let
-           initialModel =
-               { currentPage = RestaurantDetail ""
-               , restaurants = []
-               , location = Nothing
-               , loaderDisplayed = True
-               , errMsg = ""
-               , mdl = Material.model
-               , cuisineAutocomplete = Autocomplete.init "cuisine"
-               , includeCasualInSearch = True
-               , includeFancyInSearch = True
-               , openNow = False
-               , indexOfElevatedCard = Nothing
-               , selectedRestaurant = Nothing
-               , newReview = initNewReview
-               , newReviews = Dict.empty
-               , timezoneOffset = 0
-               }
-       in
-           initialModel
-               ! [ Task.perform
-                       OnFetchRestaurantErr
-                       OnFetchRestaurantSuc
-                       (mockRestaurantDetailInitTask initialModel)
-                 ]
-
-
-   mockRestaurantDetailInitTask : Model -> Task String Restaurant
-   mockRestaurantDetailInitTask model =
-       let
-           findOutWhereWeAre =
-               Debug.log "Finding out where we are " now
-                   |> onError (\err -> Debug.log "Fetch current location error." err |> (\_ -> fail "Couldn't find out where we are."))
-
-           getSomeRestaurants location =
-               getRestaurants location.latitude location.longitude model
-                   |> Debug.log "Getting some restaurants"
-                   |> onError (\err -> Debug.log "Fetch restaurants error" err |> (\_ -> fail "Couldn't fetch any restaurants."))
-
-           extractSomeRestaurant restaurants =
-               case List.head restaurants of
-                   Just restaurant ->
-                       succeed restaurant
-
-                   Nothing ->
-                       fail <| Debug.log "" "No restaurants around here bruh."
-
-           getDetailsAboutThatRestaurant restaurant =
-               getRestaurant restaurant.id
-                   |> Debug.log "Getting the restaurant deets"
-                   |> onError (\err -> Debug.log "Fetch restaurant details error" err |> (\_ -> fail "Trouble fetching restaurant details."))
-       in
-           findOutWhereWeAre
-               |> andThen getSomeRestaurants
-               |> andThen extractSomeRestaurant
-               |> andThen getDetailsAboutThatRestaurant
--}
-
-
 initTask : Task String Geolocation.Location
 initTask =
     now |> onError (\_ -> Task.fail "Geolocation failed.")
@@ -387,12 +324,11 @@ update msg model =
                         ! []
 
             UrlChange navLocation ->
-                Debug.log "Navigating..." <|
-                    { model | history = Url.parsePath Nav.route navLocation :: model.history }
-                        ! []
+                { model | history = Url.parsePath Nav.route navLocation :: model.history }
+                    ! []
 
             OnTimezoneOffsetFetched offsetInMin ->
-                { model | timezoneOffset = Debug.log "offsetInMs" offsetInMin } ! []
+                { model | timezoneOffset = offsetInMin } ! []
 
             Mdl msg ->
                 Material.update msg model
