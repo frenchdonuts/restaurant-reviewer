@@ -169,23 +169,13 @@ filterRestaurants { includeCasualInSearch, includeFancyInSearch, openNow } rs =
             Maybe.withDefault -1 (r.priceLevel)
 
         isCasual r =
-            Debug.log (r.name ++ " isCasual: ") <|
-                0
-                    <= (priceLevel r)
-                    && (priceLevel r)
-                    <= 2
+            0 <= (priceLevel r) && (priceLevel r) <= 2
 
         isFancy r =
-            --Debug.log (r.name ++ " isFancy: ") <|
-            3
-                <= (priceLevel r)
-                && (priceLevel r)
-                <= 4
+            3 <= (priceLevel r) && (priceLevel r) <= 4
 
         isOpenNow r =
-            --Debug.log (r.name ++ " isOpen: ") <|
-            Maybe.withDefault False r.openNow
-                == openNow
+            Maybe.withDefault False r.openNow == openNow
 
         filter r =
             if not openNow then

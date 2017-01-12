@@ -119,11 +119,7 @@ update config msg state data =
                             ( newModel, Cmd.none, Nothing )
 
                         Just updateMsg ->
-                            let
-                                log =
-                                    Debug.log "updateMsg from Menu subcomponent" updateMsg
-                            in
-                                update config updateMsg newModel data
+                            update config updateMsg newModel data
 
             HandleEscape ->
                 let
