@@ -103,7 +103,7 @@ update config msg state data =
             SetAutoState autoMsg ->
                 let
                     filteredData =
-                        Debug.log "filteredData" <| acceptableData state.query config.toId data
+                        acceptableData state.query config.toId data
 
                     howManyToShow =
                         List.length filteredData

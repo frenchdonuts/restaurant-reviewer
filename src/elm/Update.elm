@@ -150,11 +150,25 @@ update msg model =
 
             FetchRestaurants ->
                 let
+                    cmd =
+                        case model.location of
+                            Just location ->
+                                Http.send FetchedRestaurants <|
+                                    getRestaurants location.latitude location.longitude selectedCuisine model
+
+                            Nothing ->
+                                Debug.log "No location" Cmd.none
+
+                    selectedCuisine =
+                        List.filter cuisineFilter cuisines
+                            |> List.head
+                            |> or (cuisineToMaybe model.selectedCuisine)
+                            |> maybeToCuisine
+                            |> Debug.log "selectedCuisine"
+
                     autocompleteQuery =
                         String.toLower <| Autocomplete.getQuery cuisineAutocomplete
 
-                    -- TODO: Figure out why autocompleteQuery is still equal to the TYPED query even after User CLICKS on dropdown item
-                    -- Use elm debugger
                     maybeCuisine =
                         (cuisineString >> String.toLower >> (==) autocompleteQuery)
                             |> flip List.filter cuisines
@@ -164,24 +178,6 @@ update msg model =
                         cuisineString
                             >> String.toLower
                             >> (==) autocompleteQuery
-
-                    selectedCuisine =
-                        List.filter cuisineFilter cuisines
-                            |> List.head
-                            |> or (cuisineToMaybe model.selectedCuisine)
-                            |> maybeToCuisine
-
-                    log =
-                        Debug.log "selectedCuisine" selectedCuisine
-
-                    cmd =
-                        case model.location of
-                            Just location ->
-                                Http.send FetchedRestaurants <|
-                                    getRestaurants location.latitude location.longitude selectedCuisine model
-
-                            Nothing ->
-                                Debug.log "No location" Cmd.none
                 in
                     model ! [ cmd ]
 
