@@ -28,14 +28,16 @@ var commonConfig = {
 
     module: {
         noParse: /\.elm$/,
-        loaders: [{
-            test: /\.(eot|ttf|woff|woff2|svg)$/,
+        loaders: [
+        {
+            test: /\.(eot|ttf|woff|woff2|svg|json)$/,
             loader: 'file-loader'
         }, {
             test: /\.js$/,
             exclude: /node_modules/,
             loader: "babel-loader"
-        }]
+        }
+        ]
     },
 
     plugins: [
