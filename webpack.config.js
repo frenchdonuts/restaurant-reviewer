@@ -28,16 +28,14 @@ var commonConfig = {
 
     module: {
         noParse: /\.elm$/,
-        loaders: [
-        {
+        loaders: [{
             test: /\.(eot|ttf|woff|woff2|svg|json)$/,
             loader: 'file-loader'
         }, {
             test: /\.js$/,
             exclude: /node_modules/,
             loader: "babel-loader"
-        }
-        ]
+        }]
     },
 
     plugins: [
@@ -146,11 +144,15 @@ if (TARGET_ENV === 'production') {
 
         plugins: [
             new CopyWebpackPlugin([{
-                from: 'src/static/img/',
-                to: 'static/img/'
+                from: 'src/static/manifest.json',
+                to: 'static/manifest.json'
             }, {
-                from: 'src/favicon.ico'
-            }, ]),
+                from: 'src/static/android-chrome-192x192.png',
+                to: 'static/android-chrome-192x192.png'
+            }, {
+                from: 'src/static/android-chrome-512x512.png',
+                to: 'static/android-chrome-512x512.png'
+            }]),
 
             new webpack.optimize.OccurenceOrderPlugin(),
 
