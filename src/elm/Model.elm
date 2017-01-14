@@ -12,6 +12,7 @@ type alias Model =
     , location : Maybe Geolocation.Location
     , loaderDisplayed : Bool
     , errMsg : String
+    , shouldAlert : Bool
     , cuisineAutocomplete : Autocomplete.State Cuisine
     , selectedCuisine : Maybe Cuisine
     , menuOpen : Bool

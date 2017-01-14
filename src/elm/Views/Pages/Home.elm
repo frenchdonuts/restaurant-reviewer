@@ -4,8 +4,8 @@ import Types exposing (..)
 import Model exposing (..)
 import Msg exposing (..)
 import Components.Autocomplete as Autocomplete
-import Helper exposing (prices, priceString, cuisines, cuisineString)
-import Html exposing (Html, map, div, text, img, h4, select, option)
+import Helper exposing (prices, priceString, cuisines, cuisineString, (+|+), (||>))
+import Html exposing (Html, map, div, text, img, h4, select, option, p)
 import Html.Attributes as Attr
 import Html.Events as Events
 import Material.Grid exposing (grid, cell, size, Device(..), noSpacing, Cell, offset)
@@ -57,7 +57,7 @@ cuisineAutocompleteViewConfig errMsg =
 view : Model -> Html Msg
 view model =
     let
-        { selectedCuisine, errMsg, cuisineAutocomplete } =
+        { selectedCuisine, errMsg, shouldAlert, cuisineAutocomplete } =
             model
 
         cuisineInDropdown =
@@ -105,6 +105,14 @@ view model =
                     ]
                     [ listOfRestaurants model ]
                 ]
+              -- Offscreen p to alert accessibility Users off validation errors
+            , (p ||> (+|+) (shouldAlert) [ Attr.attribute "role" "alert" ])
+                [ Attr.style
+                    [ ( "position", "absolute" )
+                    , ( "left", "99999999999px" )
+                    ]
+                ]
+                [ text errMsg ]
             ]
 
 

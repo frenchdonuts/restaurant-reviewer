@@ -5,7 +5,7 @@ import Model exposing (..)
 import Msg exposing (..)
 import Api exposing (..)
 import Nav
-import Helper exposing (cuisines, maybeToCuisine, cuisineToMaybe, cuisineString, cuisineStringInverse, prices, intToRating)
+import Helper exposing (cuisines, maybeToCuisine, cuisineToMaybe, cuisineString, cuisineStringInverse, prices, intToRating, (>>=))
 import Utils exposing (isJust)
 import Zipper1D as Zipper
 import Components.Autocomplete as Autocomplete
@@ -30,6 +30,7 @@ init location =
     , location = Nothing
     , loaderDisplayed = True
     , errMsg = ""
+    , shouldAlert = False
     , mdl = Material.model
     , cuisineAutocomplete = Autocomplete.init "cuisine"
     , selectedCuisine = Nothing
