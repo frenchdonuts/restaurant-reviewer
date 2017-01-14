@@ -287,12 +287,11 @@ type alias ViewConfig data =
     , ul : List (Attribute Never)
     , li : Menu.KeySelected -> Menu.MouseSelected -> Int -> data -> Menu.HtmlDetails Never
     , inputLabel : String
-    , errMsg : String
     }
 
 
-view : ViewConfig a -> State a -> List a -> Html Msg
-view config state data =
+view : ViewConfig a -> String -> State a -> List a -> Html Msg
+view config errMsg state data =
     let
         howManyToShow =
             List.length <| acceptableData state.query config.toId data
@@ -347,16 +346,11 @@ view config state data =
             else
                 attributes
 
-        labelId =
-            config.inputLabel
-                |> String.split " "
-                |> String.join ""
-                |> (++) "-label"
-
         textboxAttributes =
-            [ attribute "role" "textbox"
+            [ id (inputId config)
+            , attribute "role" "textbox"
             , attribute "aria-autocomplete" "list"
-            , attribute "aria-labelledby" labelId
+            , attribute "aria-labelledby" (labelId config)
             , attribute "aria-multiline" "false"
             ]
                 |> ariaActiveDescendant
@@ -382,7 +376,7 @@ view config state data =
         div (comboxboxAttributes ++ [ style [ ( "position", "relative" ) ] ])
             (List.append
                 [ span
-                    [ id labelId, hidden True ]
+                    [ id (labelId config), hidden True ]
                     [ text config.inputLabel ]
                 , Textfield.view Textfield
                     state.textfield
@@ -395,7 +389,9 @@ view config state data =
                     , Textfield.label config.inputLabel
                     , Textfield.floatingLabel
                     , Textfield.text_
-                    , Options.when (Textfield.error config.errMsg) (not <| String.isEmpty config.errMsg)
+                    , Options.when
+                        (Textfield.error errMsg)
+                        (not <| String.isEmpty errMsg)
                     , Options.css "width" "100%"
                     , Options.css "margin-bottom" "-8px"
                     ]
@@ -467,3 +463,19 @@ viewConfig config autocompleteId =
                    ]
         , li = config.li
         }
+
+
+labelId : ViewConfig a -> String
+labelId =
+    .inputLabel
+        >> String.split " "
+        >> String.join ""
+        >> flip (++) "-label"
+
+
+inputId : ViewConfig a -> String
+inputId =
+    .inputLabel
+        >> String.split " "
+        >> String.join ""
+        >> flip (++) "-input"

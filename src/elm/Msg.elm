@@ -23,6 +23,8 @@ type Msg
       -- Cuisine Selector (Autocomplete, Home page)
     | CuisineAutocomplete Autocomplete.Msg
     | SelectedCuisine (Maybe Cuisine)
+    | OnSearchBtnPressed
+    | AlertAccessibilityUser Bool
       -- Filter Menu
     | ToggleMenu
     | MouseEnterMenuItem (Maybe Int)

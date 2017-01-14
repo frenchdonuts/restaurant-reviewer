@@ -4,6 +4,7 @@ import Types exposing (..)
 import Model exposing (..)
 import Msg exposing (..)
 import Components.Autocomplete as Autocomplete
+import Configs
 import Helper exposing (prices, priceString, cuisines, cuisineString, (+|+), (||>))
 import Html exposing (Html, map, div, text, img, h4, select, option, p)
 import Html.Attributes as Attr
@@ -20,38 +21,6 @@ import Material.Color as Color
 import Material.Icon as Icon
 import Material.Typography as Typography
 import Json.Decode as Json
-
-
-cuisineAutocompleteViewConfig : String -> Autocomplete.ViewConfig Cuisine
-cuisineAutocompleteViewConfig errMsg =
-    let
-        customLi keySelected mouseSelected i cuisine =
-            { attributes =
-                [ Attr.id <| Autocomplete.descendantId cuisineString cuisine
-                , Attr.classList
-                    [ ( "mdl-list__item", True )
-                    , ( "active", keySelected || mouseSelected )
-                    ]
-                , Attr.style [ ( "background-color", "white" ) ]
-                , Attr.attribute "role" "option"
-                ]
-            , children = [ Html.text (cuisineString cuisine) ]
-            }
-    in
-        { toId = cuisineString
-        , ul =
-            [ Attr.class "mdl-list"
-            , Attr.style
-                [ ( "position", "absolute" )
-                , ( "width", "100%" )
-                , ( "z-index", "2" )
-                , ( "margin-top", "-19px" )
-                ]
-            ]
-        , li = customLi
-        , inputLabel = "Select cuisine type"
-        , errMsg = errMsg
-        }
 
 
 view : Model -> Html Msg
@@ -83,7 +52,8 @@ view model =
                     , offset Tablet 2
                     ]
                     [ Autocomplete.view
-                        (cuisineAutocompleteViewConfig errMsg)
+                        Configs.cuisineAutocompleteViewConfig
+                        errMsg
                         cuisineAutocomplete
                         cuisines
                         |> map CuisineAutocomplete
@@ -106,11 +76,13 @@ view model =
                     [ listOfRestaurants model ]
                 ]
               -- Offscreen p to alert accessibility Users off validation errors
-            , (p ||> (+|+) (shouldAlert) [ Attr.attribute "role" "alert" ])
+            , p
                 [ Attr.style
                     [ ( "position", "absolute" )
                     , ( "left", "99999999999px" )
                     ]
+                , Attr.attribute "aria-live" "assertive"
+                , Attr.attribute "aria-atomic" "true"
                 ]
                 [ text errMsg ]
             ]
@@ -125,7 +97,7 @@ searchButton model idNumber =
         Button.render Mdl
             [ idNumber ]
             mdl
-            [ Button.onClick FetchRestaurants
+            [ Button.onClick OnSearchBtnPressed
             , Button.raised
             , Button.colored
             , css "width" "100%"

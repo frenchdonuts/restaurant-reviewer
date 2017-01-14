@@ -9,6 +9,7 @@ import Helper exposing (cuisines, maybeToCuisine, cuisineToMaybe, cuisineString,
 import Utils exposing (isJust)
 import Zipper1D as Zipper
 import Components.Autocomplete as Autocomplete
+import Configs
 import Http
 import Task exposing (..)
 import String
@@ -69,7 +70,7 @@ port setTimezoneOffset : (Int -> msg) -> Sub msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     let
-        { cuisineAutocomplete, selectedRestaurant, newReview } =
+        { cuisineAutocomplete, selectedRestaurant, newReview, errMsg } =
             model
     in
         case msg of
@@ -176,7 +177,7 @@ update msg model =
             CuisineAutocomplete msg ->
                 let
                     ( newState, cmd, maybeMsg ) =
-                        Autocomplete.update cuisineAutocompleteUpdateConfig msg cuisineAutocomplete cuisines
+                        Autocomplete.update Configs.cuisineAutocompleteUpdateConfig msg cuisineAutocomplete cuisines
 
                     newModel =
                         { model | cuisineAutocomplete = newState }
@@ -201,6 +202,19 @@ update msg model =
                         , errMsg = Maybe.Extra.unwrap errMsg (\_ -> "") cuisine
                     }
                         ! []
+
+            OnSearchBtnPressed ->
+                let
+                    ( newModel, cmd ) =
+                        if not <| String.isEmpty errMsg then
+                            update (AlertAccessibilityUser True) model
+                        else
+                            update FetchRestaurants model
+                in
+                    newModel ! [ cmd ]
+
+            AlertAccessibilityUser shouldAlert ->
+                { model | shouldAlert = shouldAlert } ! []
 
             {--Filter Menu --}
             ToggleMenu ->
@@ -340,10 +354,3 @@ update msg model =
 
             Mdl msg ->
                 Material.update msg model
-
-
-cuisineAutocompleteUpdateConfig : Autocomplete.UpdateConfig Msg Cuisine
-cuisineAutocompleteUpdateConfig =
-    { toId = cuisineString
-    , onSelectChoice = SelectedCuisine
-    }
