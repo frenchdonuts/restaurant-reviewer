@@ -78,7 +78,7 @@ update config msg state data =
     if not state.focused then
         case msg of
             OnFocus ->
-                ( { state | focused = True }, Cmd.none, Nothing )
+                ( { state | focused = True, showMenu = True }, Cmd.none, Nothing )
 
             _ ->
                 ( state, Cmd.none, Nothing )
@@ -95,10 +95,17 @@ update config msg state data =
                     selectedDatum =
                         if List.length filteredData == 1 then
                             List.head filteredData
+                                |> Maybe.andThen
+                                    (\data ->
+                                        if config.toId data == newQuery then
+                                            Just data
+                                        else
+                                            Nothing
+                                    )
                         else
                             Nothing
                 in
-                    ( { state | query = newQuery, showMenu = showMenu, selectedDatum = selectedDatum }, Cmd.none, Nothing )
+                    ( { state | query = newQuery, showMenu = showMenu, selectedDatum = selectedDatum }, Cmd.none, Just (config.onSelectChoice selectedDatum) )
 
             SetAutoState autoMsg ->
                 let
@@ -206,18 +213,22 @@ update config msg state data =
                     , Task.perform
                         (\_ -> NoOp)
                         (Dom.focus (state.autocompleteId ++ "-input") |> Task.onError (\err -> Task.succeed ()))
-                    , Nothing
+                    , Just (config.onSelectChoice newModel.selectedDatum)
                     )
 
             PreviewDatum id ->
-                ( { state
-                    | selectedDatum =
-                        getDatumAtId data config.toId id
-                        --, showMenu = state.focused
-                  }
-                , Cmd.none
-                , Nothing
-                )
+                let
+                    newModel =
+                        { state
+                            | selectedDatum =
+                                getDatumAtId data config.toId id
+                                --, showMenu = state.focused
+                        }
+                in
+                    ( newModel
+                    , Cmd.none
+                    , Just (config.onSelectChoice newModel.selectedDatum)
+                    )
 
             OnBlur ->
                 let
@@ -253,10 +264,14 @@ getDatumAtId data toId id =
 
 setQuery : State a -> (a -> String) -> String -> List a -> State a
 setQuery state toId id data =
-    { state
-        | query = Maybe.withDefault "" <| Maybe.map toId <| getDatumAtId data toId id
-        , selectedDatum = getDatumAtId data toId id
-    }
+    let
+        datum =
+            getDatumAtId data toId id
+    in
+        { state
+            | query = Maybe.withDefault "" <| Maybe.map toId <| datum
+            , selectedDatum = datum
+        }
 
 
 resetMenu : State a -> State a
@@ -351,7 +366,7 @@ view config state data =
             if state.showMenu then
                 case state.selectedDatum of
                     Just datum ->
-                        (attribute "aria-activedescendant" (descendantId config datum)) :: attributes
+                        (attribute "aria-activedescendant" (descendantId config.toId datum)) :: attributes
 
                     Nothing ->
                         attributes
@@ -382,6 +397,7 @@ view config state data =
                     , Textfield.text_
                     , Options.when (Textfield.error config.errMsg) (not <| String.isEmpty config.errMsg)
                     , Options.css "width" "100%"
+                    , Options.css "margin-bottom" "-8px"
                     ]
                 ]
                 menu
@@ -391,15 +407,25 @@ view config state data =
 acceptableData : String -> (a -> String) -> List a -> List a
 acceptableData query toId data =
     let
-        lowerQuery =
-            String.toLower query
+        filterPredicate datum =
+            if query == "" then
+                True
+            else
+                toId datum
+                    |> String.toLower
+                    |> String.contains (String.toLower query)
     in
-        List.filter (String.contains lowerQuery << String.toLower << toId) data
+        List.filter filterPredicate data
 
 
 viewMenu : ViewConfig a -> Int -> State a -> List a -> Html Msg
 viewMenu config howManyToShow state data =
-    Html.map SetAutoState (Menu.view (viewConfig config state.autocompleteId) howManyToShow state.autoState (acceptableData state.query config.toId data))
+    Menu.view
+        (viewConfig config state.autocompleteId)
+        howManyToShow
+        state.autoState
+        (acceptableData state.query config.toId data)
+        |> Html.map SetAutoState
 
 
 updateConfig : UpdateConfig msg a -> Menu.UpdateConfig Msg a
@@ -423,9 +449,9 @@ updateConfig config =
         }
 
 
-descendantId : ViewConfig a -> a -> String
-descendantId config datum =
-    config.toId datum
+descendantId : (a -> String) -> a -> String
+descendantId toId datum =
+    toId datum
         |> String.split " "
         |> String.join ""
 
@@ -433,7 +459,7 @@ descendantId config datum =
 viewConfig : ViewConfig a -> String -> Menu.ViewConfig a
 viewConfig config autocompleteId =
     Menu.viewConfig
-        { toId = descendantId config
+        { toId = config.toId
         , ul =
             config.ul
                 ++ [ id <| autocompleteId ++ "-list"

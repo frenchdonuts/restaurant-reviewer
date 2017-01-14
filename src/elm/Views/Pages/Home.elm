@@ -27,7 +27,7 @@ cuisineAutocompleteViewConfig errMsg =
     let
         customLi keySelected mouseSelected i cuisine =
             { attributes =
-                [ Attr.id << String.join "" << String.split " " <| (cuisineString cuisine)
+                [ Attr.id <| Autocomplete.descendantId cuisineString cuisine
                 , Attr.classList
                     [ ( "mdl-list__item", True )
                     , ( "active", keySelected || mouseSelected )
@@ -57,21 +57,44 @@ cuisineAutocompleteViewConfig errMsg =
 view : Model -> Html Msg
 view model =
     let
-        { restaurants, loaderDisplayed, errMsg, mdl, cuisineAutocomplete, includeCasualInSearch, includeFancyInSearch, openNow } =
+        { selectedCuisine, errMsg, cuisineAutocomplete } =
             model
+
+        cuisineInDropdown =
+            case selectedCuisine of
+                Just cuisine ->
+                    [ cuisine ]
+
+                Nothing ->
+                    cuisines
     in
         (Options.styled_ div)
             []
-            [ Attr.style [ ( "min-height", "500px" ), ( "padding-top", "2%" ) ] ]
+            [ Attr.style
+                [ ( "min-height", "500px" ), ( "padding-top", "2%" ) ]
+            ]
             [ grid
                 []
                 [ cell
-                    [ size Desktop 4, size Tablet 4, size Phone 4, offset Desktop 4, offset Tablet 2 ]
-                    [ map CuisineAutocomplete
-                        (Autocomplete.view (cuisineAutocompleteViewConfig "") cuisineAutocomplete cuisines)
+                    [ size Desktop 4
+                    , size Tablet 4
+                    , size Phone 4
+                    , offset Desktop 4
+                    , offset Tablet 2
+                    ]
+                    [ Autocomplete.view
+                        (cuisineAutocompleteViewConfig errMsg)
+                        cuisineAutocomplete
+                        cuisines
+                        |> map CuisineAutocomplete
                     ]
                 , cell
-                    [ size Desktop 4, offset Desktop 4, size Tablet 4, offset Tablet 2, size Phone 4 ]
+                    [ size Desktop 4
+                    , offset Desktop 4
+                    , size Tablet 4
+                    , offset Tablet 2
+                    , size Phone 4
+                    ]
                     [ searchButton model 3 ]
                 , cell
                     [ size Desktop 10

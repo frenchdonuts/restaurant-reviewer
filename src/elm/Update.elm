@@ -107,8 +107,7 @@ update msg model =
                         String.toLower <| Autocomplete.getQuery cuisineAutocomplete
 
                     maybeCuisine =
-                        (cuisineString >> String.toLower >> (==) autocompleteQuery)
-                            |> flip List.filter cuisines
+                        List.filter cuisineFilter cuisines
                             |> List.head
 
                     cuisineFilter =
@@ -192,11 +191,15 @@ update msg model =
                     newModel_ ! [ Cmd.map CuisineAutocomplete cmd, cmd_ ]
 
             SelectedCuisine cuisine ->
-                { model
-                    | selectedCuisine = cuisine
-                    , errMsg = ""
-                }
-                    ! []
+                let
+                    errMsg =
+                        "Please choose a cuisine type from the list"
+                in
+                    { model
+                        | selectedCuisine = cuisine
+                        , errMsg = Maybe.Extra.unwrap errMsg (\_ -> "") cuisine
+                    }
+                        ! []
 
             {--Filter Menu --}
             ToggleMenu ->
