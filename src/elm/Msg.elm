@@ -22,7 +22,7 @@ type Msg
       {--Home page --}
       -- Cuisine Selector (Autocomplete, Home page)
     | CuisineAutocomplete Autocomplete.Msg
-    | SelectedCuisine Cuisine
+    | SelectedCuisine (Maybe Cuisine)
       -- Filter Menu
     | ToggleMenu
     | MouseEnterMenuItem (Maybe Int)

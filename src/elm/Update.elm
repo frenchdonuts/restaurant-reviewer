@@ -32,7 +32,7 @@ init location =
     , errMsg = ""
     , mdl = Material.model
     , cuisineAutocomplete = Autocomplete.init "cuisine"
-    , selectedCuisine = NoPreference
+    , selectedCuisine = Nothing
     , menuOpen = False
     , indexOfMousedMenuItem = Nothing
     , includeCasualInSearch = True
@@ -99,7 +99,7 @@ update msg model =
                     selectedCuisine =
                         List.filter cuisineFilter cuisines
                             |> List.head
-                            |> or (cuisineToMaybe model.selectedCuisine)
+                            |> or model.selectedCuisine
                             |> maybeToCuisine
                             |> Debug.log "selectedCuisine"
 
@@ -192,7 +192,11 @@ update msg model =
                     newModel_ ! [ Cmd.map CuisineAutocomplete cmd, cmd_ ]
 
             SelectedCuisine cuisine ->
-                { model | selectedCuisine = cuisine } ! []
+                { model
+                    | selectedCuisine = cuisine
+                    , errMsg = ""
+                }
+                    ! []
 
             {--Filter Menu --}
             ToggleMenu ->
@@ -337,14 +341,5 @@ update msg model =
 cuisineAutocompleteUpdateConfig : Autocomplete.UpdateConfig Msg Cuisine
 cuisineAutocompleteUpdateConfig =
     { toId = cuisineString
-    , onSelectChoice =
-        SelectedCuisine
-            << (\maybeCuisine ->
-                    case maybeCuisine of
-                        Just cuisine ->
-                            cuisine
-
-                        Nothing ->
-                            NoPreference
-               )
+    , onSelectChoice = SelectedCuisine
     }

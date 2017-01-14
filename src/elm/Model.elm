@@ -13,7 +13,7 @@ type alias Model =
     , loaderDisplayed : Bool
     , errMsg : String
     , cuisineAutocomplete : Autocomplete.State Cuisine
-    , selectedCuisine : Cuisine
+    , selectedCuisine : Maybe Cuisine
     , menuOpen : Bool
     , indexOfMousedMenuItem : Maybe Int
     , includeCasualInSearch : Bool
