@@ -14,6 +14,20 @@ import Types exposing (..)
         xs1
 
 
+(||>) : (a -> b -> c) -> (a -> a) -> (a -> b -> c)
+(||>) f t =
+    (\a b -> f (t a) b)
+
+
+(>>=) : ( model, Cmd msg ) -> (model -> ( model, Cmd msg )) -> ( model, Cmd msg )
+(>>=) ( model, cmd ) update =
+    let
+        ( newModel, moreCmds ) =
+            update model
+    in
+        newModel ! [ cmd, moreCmds ]
+
+
 prices : List Price
 prices =
     [ Steal
