@@ -22,8 +22,8 @@ import Material.Typography as Typography
 import Json.Decode as Json
 
 
-cuisineAutocompleteViewConfig : Autocomplete.ViewConfig Cuisine
-cuisineAutocompleteViewConfig =
+cuisineAutocompleteViewConfig : String -> Autocomplete.ViewConfig Cuisine
+cuisineAutocompleteViewConfig errMsg =
     let
         customLi keySelected mouseSelected i cuisine =
             { attributes =
@@ -50,6 +50,7 @@ cuisineAutocompleteViewConfig =
             ]
         , li = customLi
         , inputLabel = "Select cuisine type"
+        , errMsg = errMsg
         }
 
 
@@ -67,7 +68,7 @@ view model =
                 [ cell
                     [ size Desktop 4, size Tablet 4, size Phone 4, offset Desktop 4, offset Tablet 2 ]
                     [ map CuisineAutocomplete
-                        (Autocomplete.view cuisineAutocompleteViewConfig cuisineAutocomplete cuisines)
+                        (Autocomplete.view (cuisineAutocompleteViewConfig "") cuisineAutocomplete cuisines)
                     ]
                 , cell
                     [ size Desktop 4, offset Desktop 4, size Tablet 4, offset Tablet 2, size Phone 4 ]

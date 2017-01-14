@@ -272,6 +272,7 @@ type alias ViewConfig data =
     , ul : List (Attribute Never)
     , li : Menu.KeySelected -> Menu.MouseSelected -> Int -> data -> Menu.HtmlDetails Never
     , inputLabel : String
+    , errMsg : String
     }
 
 
@@ -379,6 +380,7 @@ view config state data =
                     , Textfield.label config.inputLabel
                     , Textfield.floatingLabel
                     , Textfield.text_
+                    , Options.when (Textfield.error config.errMsg) (not <| String.isEmpty config.errMsg)
                     , Options.css "width" "100%"
                     ]
                 ]
