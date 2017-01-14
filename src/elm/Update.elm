@@ -22,7 +22,7 @@ import Material.Layout as Layout
 import Time.DateTime as Time
 import Time as CoreTime
 import UrlParser as Url
-import Maybe.Extra exposing (or)
+import Maybe.Extra exposing (or, isNothing, andMap)
 
 
 init : Navigation.Location -> ( Model, Cmd Msg )
@@ -31,7 +31,6 @@ init location =
     , location = Nothing
     , loaderDisplayed = True
     , errMsg = ""
-    , shouldAlert = False
     , mdl = Material.model
     , cuisineAutocomplete = Autocomplete.init "cuisine"
     , selectedCuisine = Nothing
@@ -89,35 +88,35 @@ update msg model =
 
             FetchRestaurants ->
                 let
-                    cmd =
-                        case model.location of
-                            Just location ->
-                                Http.send FetchedRestaurants <|
-                                    getRestaurants location.latitude location.longitude selectedCuisine model
-
-                            Nothing ->
-                                Debug.log "No location" Cmd.none
+                    fetchRestaurantsCmd =
+                        model.location
+                            |> Maybe.map
+                                (\location cuisine ->
+                                    Http.send FetchedRestaurants <|
+                                        getRestaurants
+                                            location.latitude
+                                            location.longitude
+                                            cuisine
+                                            model
+                                )
+                            |> andMap selectedCuisine
+                            |> Maybe.withDefault Cmd.none
 
                     selectedCuisine =
                         List.filter cuisineFilter cuisines
                             |> List.head
                             |> or model.selectedCuisine
-                            |> maybeToCuisine
                             |> Debug.log "selectedCuisine"
-
-                    autocompleteQuery =
-                        String.toLower <| Autocomplete.getQuery cuisineAutocomplete
-
-                    maybeCuisine =
-                        List.filter cuisineFilter cuisines
-                            |> List.head
 
                     cuisineFilter =
                         cuisineString
                             >> String.toLower
                             >> (==) autocompleteQuery
+
+                    autocompleteQuery =
+                        String.toLower <| Autocomplete.getQuery cuisineAutocomplete
                 in
-                    model ! [ cmd ]
+                    model ! [ fetchRestaurantsCmd ]
 
             FetchedRestaurants fetchRestaurantsResult ->
                 case fetchRestaurantsResult of
@@ -204,17 +203,7 @@ update msg model =
                         ! []
 
             OnSearchBtnPressed ->
-                let
-                    ( newModel, cmd ) =
-                        if not <| String.isEmpty errMsg then
-                            update (AlertAccessibilityUser True) model
-                        else
-                            update FetchRestaurants model
-                in
-                    newModel ! [ cmd ]
-
-            AlertAccessibilityUser shouldAlert ->
-                { model | shouldAlert = shouldAlert } ! []
+                update FetchRestaurants model
 
             {--Filter Menu --}
             ToggleMenu ->
@@ -282,21 +271,28 @@ update msg model =
 
             OnUpdateNewReview msg ->
                 let
-                    ( newReview_, cmd ) =
+                    ( newReview_, cmd, errMsg ) =
                         case msg of
                             UpdateName name ->
-                                { newReview | authorName = name } ! []
+                                let
+                                    errMsg =
+                                        if String.isEmpty name then
+                                            "Please enter your name"
+                                        else
+                                            ""
+                                in
+                                    ( { newReview | authorName = name }, Cmd.none, errMsg )
 
                             UpdateTime dateTime ->
-                                { newReview | time = Just dateTime } ! []
+                                ( { newReview | time = Just dateTime }, Cmd.none, "" )
 
                             UpdateRating rating ->
-                                { newReview | rating = rating } ! []
+                                ( { newReview | rating = rating }, Cmd.none, "" )
 
                             UpdateText text ->
-                                { newReview | text = text } ! []
+                                ( { newReview | text = text }, Cmd.none, "" )
                 in
-                    { model | newReview = newReview_ } ! []
+                    { model | newReview = newReview_, errMsg = errMsg } ! []
 
             OnNewReviewSubmitBtnPressed ->
                 let
@@ -310,13 +306,13 @@ update msg model =
 
                     validateNewReview { authorName, text } =
                         (authorName /= "")
-                            && (text /= "")
                 in
                     if validateNewReview newReview then
                         model ! [ Task.perform (ValidNewReviewSubmitted newReview) CoreTime.now ]
                     else
                         { model
                             | newReview = Debug.log "Invalid NewReview" newReview
+                            , errMsg = "Please enter your name"
                         }
                             ! []
 
@@ -346,7 +342,10 @@ update msg model =
                         ! []
 
             UrlChange navLocation ->
-                { model | history = Url.parsePath Nav.route navLocation :: model.history }
+                { model
+                    | history = Url.parsePath Nav.route navLocation :: model.history
+                    , errMsg = ""
+                }
                     ! []
 
             OnTimezoneOffsetFetched offsetInMin ->

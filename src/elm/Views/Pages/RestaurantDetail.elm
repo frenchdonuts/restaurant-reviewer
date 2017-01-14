@@ -6,7 +6,7 @@ import Views.Helpers exposing (ratingToString, dayTimeToString, dayToString, per
 import Helper exposing (ratingToInt)
 import Msg exposing (..)
 import Zipper1D as Zipper
-import Html exposing (Html, div, text, img, button)
+import Html exposing (Html, div, text, img, button, p)
 import Html.Attributes as Attrs
 import Html.Events as Events
 import Material.Grid exposing (grid, cell, size, offset, Device(..))
@@ -42,8 +42,8 @@ view model =
               -- Offscreen p to alert accessibility Users off validation errors
             , p
                 [ invisible
-                , Attr.attribute "aria-live" "assertive"
-                , Attr.attribute "aria-atomic" "true"
+                , Attrs.attribute "aria-live" "assertive"
+                , Attrs.attribute "aria-atomic" "true"
                 ]
                 [ text errMsg ]
             ]
@@ -279,7 +279,7 @@ newReviewAndCurrentRating r m =
 newReview : Restaurant -> Model -> Html Msg
 newReview r m =
     let
-        { newReview } =
+        { newReview, errMsg } =
             m
     in
         grid
@@ -295,6 +295,9 @@ newReview r m =
                     , Textfield.text_
                     , Textfield.value newReview.authorName
                     , Textfield.onInput <| OnUpdateNewReview << UpdateName
+                    , Options.when
+                        (Textfield.error errMsg)
+                        (not <| String.isEmpty errMsg)
                     , css "width" "100%"
                     , Options.inner
                         [ Options.attribute <| Attrs.attribute "aria-labelledby" "nameinput-label"

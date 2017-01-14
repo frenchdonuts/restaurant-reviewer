@@ -26,7 +26,7 @@ import Json.Decode as Json
 view : Model -> Html Msg
 view model =
     let
-        { selectedCuisine, errMsg, shouldAlert, cuisineAutocomplete } =
+        { selectedCuisine, errMsg, cuisineAutocomplete } =
             model
 
         cuisineInDropdown =
