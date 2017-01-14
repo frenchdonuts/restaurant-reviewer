@@ -25,7 +25,7 @@ import Dict
 view : Model -> Html Msg
 view model =
     let
-        { selectedRestaurant } =
+        { selectedRestaurant, errMsg } =
             model
 
         view =
@@ -36,7 +36,17 @@ view model =
                 Nothing ->
                     div [] [ text "No restaurant selected" ]
     in
-        view
+        div
+            []
+            [ view
+              -- Offscreen p to alert accessibility Users off validation errors
+            , p
+                [ invisible
+                , Attr.attribute "aria-live" "assertive"
+                , Attr.attribute "aria-atomic" "true"
+                ]
+                [ text errMsg ]
+            ]
 
 
 {-| A set of CSS properties to move an element off-screen
