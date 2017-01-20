@@ -19,4 +19,7 @@ route =
     Url.oneOf
         [ Url.map Home top
         , Url.map RestaurantDetail (s "restaurant" </> string)
+          -- Github Pages will prepend the project name (restaurant-reviewer)
+        , Url.map Home (s "restaurant-reviewer" </> top)
+        , Url.map RestaurantDetail (s "restaurant-reviewer" </> s "restaurant" </> string)
         ]
