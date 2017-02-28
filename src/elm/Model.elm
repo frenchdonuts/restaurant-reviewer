@@ -16,9 +16,8 @@ type alias Model =
     , selectedCuisine : Maybe Cuisine
     , menuOpen : Bool
     , indexOfMousedMenuItem : Maybe Int
-    , includeCasualInSearch : Bool
-    , includeFancyInSearch : Bool
-    , openNow : Bool
+    , priceFilter : PriceFilter
+    , includeOnlyOpenRestaurants : Bool
     , indexOfElevatedCard : Maybe Int
     , selectedRestaurant : Maybe Restaurant
     , newReviews : Dict.Dict String (List NewReview)

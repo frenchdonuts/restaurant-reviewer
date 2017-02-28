@@ -127,7 +127,10 @@ listOfRestaurants model =
                     , noSpacing
                     , Options.attribute <| Attr.attribute "role" "list"
                     ]
-                    (List.indexedMap cardCell <| filterRestaurants model restaurants)
+                    (restaurants
+                        |> filterRestaurants model
+                        |> List.indexedMap cardCell
+                    )
 
         placeHolder =
             cell
@@ -167,40 +170,52 @@ listOfRestaurants model =
 
 
 filterRestaurants : Model -> List RestaurantPreview -> List RestaurantPreview
-filterRestaurants { includeCasualInSearch, includeFancyInSearch, openNow } rs =
-    let
-        priceLevel r =
-            Maybe.withDefault -1 (r.priceLevel)
+filterRestaurants { priceFilter, includeOnlyOpenRestaurants } =
+    List.filter
+        (\r ->
+            let
+                priceLevel =
+                    Maybe.withDefault -1 (r.priceLevel)
 
-        isCasual r =
-            0 <= (priceLevel r) && (priceLevel r) <= 2
+                restaurantIsOpenNow =
+                    Maybe.withDefault False r.openNow
 
-        isFancy r =
-            3 <= (priceLevel r) && (priceLevel r) <= 4
+                isCasual =
+                    0 <= priceLevel && priceLevel <= 2
+            in
+                case priceFilter of
+                    IncludeBoth ->
+                        restaurantIsOpenNow && includeOnlyOpenRestaurants
 
-        isOpenNow r =
-            Maybe.withDefault False r.openNow == openNow
+                    IncludeJustFancy ->
+                        (not isCasual) && restaurantIsOpenNow && includeOnlyOpenRestaurants
 
-        filter r =
-            if not openNow then
-                ((includeCasualInSearch && isCasual r) || (includeFancyInSearch && isFancy r))
-            else
-                ((includeCasualInSearch && isCasual r) || (includeFancyInSearch && isFancy r))
-                    && isOpenNow r
-    in
-        List.filter filter rs
+                    IncludeJustCasual ->
+                        isCasual && restaurantIsOpenNow && includeOnlyOpenRestaurants
+        )
 
 
 filterMenu : Model -> Int -> Html Msg
 filterMenu model idNumber =
     let
-        { includeCasualInSearch, includeFancyInSearch, openNow } =
+        { priceFilter, includeOnlyOpenRestaurants } =
             model
+
+        ( includeCasualInSearch, includeFancyInSearch ) =
+            case priceFilter of
+                IncludeBoth ->
+                    ( True, True )
+
+                IncludeJustFancy ->
+                    ( False, True )
+
+                IncludeJustCasual ->
+                    ( True, False )
 
         menuItems =
             [ ( includeCasualInSearch, ToggleCasual, "Casual" )
             , ( includeFancyInSearch, ToggleFancy, "Fancy" )
-            , ( openNow, ToggleOpenNow, "Open Now" )
+            , ( includeOnlyOpenRestaurants, ToggleIncludeOnlyOpenRestaurants, "Open Now" )
             ]
 
         menu =
@@ -395,58 +410,3 @@ restaurantCard { indexOfElevatedCard } i r =
                 , Card.subhead [ Color.text Color.white ] [ text address ]
                 ]
             ]
-
-
-includeCasualRestaurantsToggle : Model -> Int -> Html Msg
-includeCasualRestaurantsToggle model idNumber =
-    let
-        { includeCasualInSearch, mdl } =
-            model
-    in
-        Toggles.checkbox Mdl
-            [ idNumber ]
-            model.mdl
-            [ Toggles.value includeCasualInSearch
-            , Toggles.ripple
-            , Toggles.onClick ToggleCasual
-            , Options.inner
-                [ Options.attribute <| Attr.attribute "aria-label" "Include casual restaurants"
-                ]
-            ]
-            [ text "Casual" ]
-
-
-includeFancyRestaurantsToggle : Model -> Int -> Html Msg
-includeFancyRestaurantsToggle model idNumber =
-    let
-        { includeFancyInSearch, mdl } =
-            model
-    in
-        Toggles.checkbox Mdl
-            [ idNumber ]
-            model.mdl
-            [ Toggles.value includeFancyInSearch
-            , Toggles.ripple
-            , Toggles.onClick ToggleFancy
-            , Options.inner
-                [ Options.attribute <| Attr.attribute "aria-label" "Include fancy restaurants"
-                ]
-            ]
-            [ text "Fancy" ]
-
-
-openNowToggle : Model -> Int -> Html Msg
-openNowToggle model idNumber =
-    let
-        { openNow, mdl } =
-            model
-    in
-        Toggles.checkbox Mdl
-            [ idNumber ]
-            mdl
-            [ Toggles.onClick ToggleOpenNow
-            , value openNow
-            , Options.inner
-                [ Options.attribute <| Attr.attribute "aria-label" "Include only open restaurants." ]
-            ]
-            [ text "Open now" ]

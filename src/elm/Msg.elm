@@ -30,8 +30,8 @@ type Msg
       -- Price Selector
     | ToggleCasual
     | ToggleFancy
-      -- Open now toggle
-    | ToggleOpenNow
+      -- Hide closed restaurants toggle
+    | ToggleIncludeOnlyOpenRestaurants
       -- Restaurant List
     | OnRestaurantClick RestaurantPreview
     | MouseEnterRestaurantCard (Maybe Int)

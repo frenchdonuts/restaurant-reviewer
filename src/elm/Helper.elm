@@ -30,10 +30,7 @@ import Types exposing (..)
 
 prices : List Price
 prices =
-    [ Steal
-    , Deal
-    , Casual
-    , Fine
+    [ Casual
     , Fancy
     ]
 
@@ -41,17 +38,8 @@ prices =
 priceString : Price -> String
 priceString price =
     case price of
-        Steal ->
-            "Steal"
-
-        Deal ->
-            "Deal"
-
         Casual ->
             "Casual"
-
-        Fine ->
-            "Fine"
 
         Fancy ->
             "Fancy"

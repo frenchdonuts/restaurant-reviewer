@@ -111,11 +111,14 @@ type alias Filters =
     }
 
 
+type PriceFilter
+    = IncludeBoth
+    | IncludeJustCasual
+    | IncludeJustFancy
+
+
 type Price
-    = Steal
-    | Deal
-    | Casual
-    | Fine
+    = Casual
     | Fancy
 
 

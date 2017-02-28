@@ -44,23 +44,18 @@ getRestaurants lat long selectedCuisine model =
 
 
 queryParameters : Cuisine -> Model -> List ( String, String )
-queryParameters cuisine { includeCasualInSearch, includeFancyInSearch, openNow, cuisineAutocomplete } =
+queryParameters cuisine { priceFilter, includeOnlyOpenRestaurants, cuisineAutocomplete } =
     let
-        minprice =
-            case includeCasualInSearch of
-                True ->
-                    "0"
+        ( minprice, maxprice ) =
+            case priceFilter of
+                IncludeBoth ->
+                    ( "0", "4" )
 
-                False ->
-                    "3"
+                IncludeJustFancy ->
+                    ( "3", "4" )
 
-        maxprice =
-            case includeFancyInSearch of
-                True ->
-                    "4"
-
-                False ->
-                    "2"
+                IncludeJustCasual ->
+                    ( "0", "2" )
 
         parameters =
             [ ( "query", cuisineString cuisine ++ " restaurant" )
@@ -68,6 +63,7 @@ queryParameters cuisine { includeCasualInSearch, includeFancyInSearch, openNow, 
               --, ( "maxprice", maxprice )
             ]
     in
+        -- TODO: Use includeOnlyOpenRestaurants
         parameters
 
 

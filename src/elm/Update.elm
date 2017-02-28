@@ -36,9 +36,8 @@ init location =
     , selectedCuisine = Nothing
     , menuOpen = False
     , indexOfMousedMenuItem = Nothing
-    , includeCasualInSearch = True
-    , includeFancyInSearch = True
-    , openNow = False
+    , priceFilter = IncludeBoth
+    , includeOnlyOpenRestaurants = False
     , indexOfElevatedCard = Nothing
     , selectedRestaurant = Nothing
     , newReview = initNewReview
@@ -121,19 +120,12 @@ update msg model =
             FetchedRestaurants fetchRestaurantsResult ->
                 case fetchRestaurantsResult of
                     Ok restaurants ->
-                        let
-                            restaurants_ =
-                                if model.openNow then
-                                    List.filter ((==) True << Utils.maybeToBool << .openNow) restaurants
-                                else
-                                    restaurants
-                        in
-                            ( { model
-                                | restaurants = restaurants_
-                                , loaderDisplayed = False
-                              }
-                            , Cmd.none
-                            )
+                        ( { model
+                            | restaurants = restaurants
+                            , loaderDisplayed = False
+                          }
+                        , Cmd.none
+                        )
 
                     Err httpError ->
                         ( { model
@@ -215,42 +207,44 @@ update msg model =
             -- Price Selector - make sure at least one of them is always True
             ToggleCasual ->
                 let
-                    casual =
-                        not model.includeCasualInSearch
+                    newPriceFilter =
+                        case model.priceFilter of
+                            IncludeBoth ->
+                                IncludeJustFancy
 
-                    fancy =
-                        if not casual then
-                            True
-                        else
-                            model.includeFancyInSearch
+                            IncludeJustFancy ->
+                                IncludeBoth
+
+                            IncludeJustCasual ->
+                                IncludeJustFancy
                 in
                     ( { model
-                        | includeCasualInSearch = casual
-                        , includeFancyInSearch = fancy
+                        | priceFilter = newPriceFilter
                       }
                     , Cmd.none
                     )
 
             ToggleFancy ->
                 let
-                    fancy =
-                        not model.includeFancyInSearch
+                    newPriceFilter =
+                        case model.priceFilter of
+                            IncludeBoth ->
+                                IncludeJustCasual
 
-                    casual =
-                        if not fancy then
-                            True
-                        else
-                            model.includeCasualInSearch
+                            IncludeJustFancy ->
+                                IncludeJustCasual
+
+                            IncludeJustCasual ->
+                                IncludeBoth
                 in
                     ( { model
-                        | includeFancyInSearch = fancy
-                        , includeCasualInSearch = casual
+                        | priceFilter = newPriceFilter
                       }
                     , Cmd.none
                     )
 
-            ToggleOpenNow ->
-                { model | openNow = not model.openNow } ! []
+            ToggleIncludeOnlyOpenRestaurants ->
+                { model | includeOnlyOpenRestaurants = not model.includeOnlyOpenRestaurants } ! []
 
             MouseEnterRestaurantCard maybeIndex ->
                 { model | indexOfElevatedCard = maybeIndex } ! []

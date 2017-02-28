@@ -18,28 +18,3 @@ main =
         , update = Update.update
         , subscriptions = Update.subscriptions
         }
-
-
-
-{-
-   init : Result String Page -> ( Model, Cmd Msg )
-   init parseResult =
-       let
-           ( initModel, initCmd ) =
-               Update.init
-
-           ( updateModel, updateCmd ) =
-               urlUpdate parseResult initModel
-       in
-           updateModel ! [ initCmd, updateCmd ]
-
-
-   urlUpdate : Result String Page -> Model -> ( Model, Cmd Msg )
-   urlUpdate parseResult model =
-       case parseResult of
-           Ok page ->
-               ( { model | currentPage = page }, Cmd.none )
-
-           Err errMsg ->
-               ( { model | currentPage = Home }, Cmd.none )
--}
