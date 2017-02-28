@@ -185,13 +185,22 @@ filterRestaurants { priceFilter, includeOnlyOpenRestaurants } =
             in
                 case priceFilter of
                     IncludeBoth ->
-                        restaurantIsOpenNow && includeOnlyOpenRestaurants
+                        if includeOnlyOpenRestaurants then
+                            restaurantIsOpenNow
+                        else
+                            True
 
                     IncludeJustFancy ->
-                        (not isCasual) && restaurantIsOpenNow && includeOnlyOpenRestaurants
+                        if includeOnlyOpenRestaurants then
+                            (not isCasual) && restaurantIsOpenNow
+                        else
+                            not isCasual
 
                     IncludeJustCasual ->
-                        isCasual && restaurantIsOpenNow && includeOnlyOpenRestaurants
+                        if includeOnlyOpenRestaurants then
+                            isCasual && restaurantIsOpenNow
+                        else
+                            isCasual
         )
 
 
@@ -373,7 +382,8 @@ restaurantCard { indexOfElevatedCard } i r =
                     else
                         Err "not handling that key"
             in
-                Json.map tagger Events.keyCode |> Json.andThen fromResult
+                Json.map tagger Events.keyCode
+                    |> Json.andThen fromResult
 
         fromResult result =
             case result of
@@ -407,6 +417,8 @@ restaurantCard { indexOfElevatedCard } i r =
                     , Options.attribute <| Attr.attribute "role" "link"
                     ]
                     [ text name ]
-                , Card.subhead [ Color.text Color.white ] [ text address ]
+                , Card.subhead
+                    [ Color.text Color.white ]
+                    [ text address ]
                 ]
             ]
