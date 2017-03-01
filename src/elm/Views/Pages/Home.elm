@@ -75,7 +75,7 @@ view model =
                     ]
                     [ listOfRestaurants model ]
                 ]
-              -- Offscreen p to alert accessibility Users off validation errors
+              -- Offscreen p to alert accessibility Users of validation errors
             , p
                 [ Attr.style
                     [ ( "position", "absolute" )
