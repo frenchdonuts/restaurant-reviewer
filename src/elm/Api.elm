@@ -13,10 +13,8 @@ import ParseInt
 import Time.DateTime as Time
 
 
-api_key : String
-api_key =
-    "AIzaSyBFF9RccdIGE7dOBQdiq8m0EPGNJH51pmg"
-
+PROXY_URL : String
+PROXY_URL = "https://localhost:3000"
 
 getRestaurants : Float -> Float -> Cuisine -> Model -> Http.Request (List RestaurantPreview)
 getRestaurants lat long selectedCuisine model =
@@ -26,16 +24,14 @@ getRestaurants lat long selectedCuisine model =
 
         parameters =
             queryParameters selectedCuisine model
-                ++ [ ( "key", api_key )
-                   , ( "location", latlong )
+                ++ [ ( "location", latlong )
                    , ( "radius", "500" )
                    ]
 
         url =
             Utils.url
-                "https://maps.googleapis.com/maps/api/place/textsearch/json"
+                (PROXY_URL ++ "/maps/api/place/textsearch/json")
                 parameters
-                |> Debug.log "url for restaurants fetch"
 
         mockUrl =
             "http://localhost:8080/static/restaurants_response.json"
@@ -87,13 +83,12 @@ getRestaurant : String -> Http.Request Restaurant
 getRestaurant id =
     let
         parameters =
-            [ ( "key", api_key )
-            , ( "placeid", id )
+            [ ( "placeid", id )
             ]
 
         url =
             Utils.url
-                "https://maps.googleapis.com/maps/api/place/details/json"
+                (PROXY_URL ++ "/maps/api/place/details/json")
                 parameters
     in
         Http.get url (field "result" decodeRestaurant)
@@ -245,8 +240,6 @@ toPhotoUrl : String -> String
 toPhotoUrl reference =
     "https://maps.googleapis.com/maps/api/place/photo?maxwidth=533&photoreference="
         ++ reference
-        ++ "&key="
-        ++ api_key
 
 
 decodeRestaurantPreview : Json.Decoder RestaurantPreview
