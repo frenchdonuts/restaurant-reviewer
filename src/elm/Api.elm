@@ -13,8 +13,8 @@ import ParseInt
 import Time.DateTime as Time
 
 
-PROXY_URL : String
-PROXY_URL = "https://localhost:3000"
+proxy_url : String
+proxy_url = "https://localhost:3000"
 
 getRestaurants : Float -> Float -> Cuisine -> Model -> Http.Request (List RestaurantPreview)
 getRestaurants lat long selectedCuisine model =
@@ -30,7 +30,7 @@ getRestaurants lat long selectedCuisine model =
 
         url =
             Utils.url
-                (PROXY_URL ++ "/maps/api/place/textsearch/json")
+                (proxy_url ++ "/maps/api/place/textsearch/json")
                 parameters
 
         mockUrl =
@@ -88,7 +88,7 @@ getRestaurant id =
 
         url =
             Utils.url
-                (PROXY_URL ++ "/maps/api/place/details/json")
+                (proxy_url ++ "/maps/api/place/details/json")
                 parameters
     in
         Http.get url (field "result" decodeRestaurant)
