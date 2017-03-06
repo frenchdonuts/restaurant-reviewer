@@ -81,8 +81,7 @@ function isGooglePlacesQuery(url) {
     var isPlacesDetailQuery =
         url.pathname === "/maps/api/place/details/json"
 
-    return isOfGoogleMapsOrigin && (isPlacesTextsearchQuery ||
-        isPlacesDetailQuery)
+    return isPlacesTextsearchQuery || isPlacesDetailQuery
 }
 
 function isImageFetch(url) {
@@ -92,7 +91,7 @@ function isImageFetch(url) {
     var isPlacesPhotoQuery =
         url.pathname === "/maps/api/place/photo"
 
-    return isOfGoogleMapsOrigin && isPlacesPhotoQuery
+    return isPlacesPhotoQuery
 }
 
 function fetchAndPutInto(cacheName, request) {
