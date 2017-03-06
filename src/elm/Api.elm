@@ -238,8 +238,7 @@ toRating i =
 -}
 toPhotoUrl : String -> String
 toPhotoUrl reference =
-    "https://maps.googleapis.com/maps/api/place/photo?maxwidth=533&photoreference="
-        ++ reference
+    proxy_url ++ "/maps/api/place/photo?maxwidth=533&photoreference=" ++ reference
 
 
 decodeRestaurantPreview : Json.Decoder RestaurantPreview
