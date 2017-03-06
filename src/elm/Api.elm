@@ -14,7 +14,7 @@ import Time.DateTime as Time
 
 
 proxy_url : String
-proxy_url = "https://localhost:3000"
+proxy_url = "http://localhost:8080"
 
 getRestaurants : Float -> Float -> Cuisine -> Model -> Http.Request (List RestaurantPreview)
 getRestaurants lat long selectedCuisine model =
