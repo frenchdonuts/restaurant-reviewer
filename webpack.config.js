@@ -18,7 +18,7 @@ var commonConfig = {
 
     output: {
         path: path.resolve(__dirname, 'dist/'),
-        filename: '[hash].js',
+        filename: './[hash].js',
     },
 
     resolve: {
