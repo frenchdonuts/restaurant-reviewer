@@ -14,7 +14,7 @@ import Time.DateTime as Time
 
 
 proxy_url : String
-proxy_url = "http://restaurant-reviewer.herokuapps.com"
+proxy_url = "http://jt-restaurant-reviewer.herokuapps.com"
 
 getRestaurants : Float -> Float -> Cuisine -> Model -> Http.Request (List RestaurantPreview)
 getRestaurants lat long selectedCuisine model =
