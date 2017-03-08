@@ -21,6 +21,7 @@ elm package install
 npm start
 ```
 * Access app at `http://localhost:8080/`
+* Enable CORS so that requests to Google Places API can get through.
 
 
 ### Build & bundle for prod:
